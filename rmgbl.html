@@ -3,14 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Beranda</title>
+    <title>Facebook</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: Helvetica, Arial, sans-serif; }
         body { background: #18191a; color: #e4e6eb; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
 
-        /* --- HEADER & NAVIGASI --- */
+        /* --- HALAMAN LOGIN --- */
+        .login-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        .fb-logo-login { color: #1877f2; font-size: 48px; font-weight: bold; letter-spacing: -2px; margin-bottom: 30px; }
+        .login-box { background: #242526; padding: 20px; border-radius: 8px; width: 100%; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        .login-box input { width: 100%; padding: 14px; margin-bottom: 12px; background: #3a3b3c; border: 1px solid #4e4f50; border-radius: 6px; color: #e4e6eb; font-size: 16px; outline: none; }
+        .login-box input:focus { border-color: #1877f2; }
+        .btn-login { width: 100%; padding: 12px; background: #1877f2; color: white; border: none; border-radius: 6px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .error-msg { color: #ff6b6b; font-size: 14px; text-align: center; margin-top: 10px; display: none; }
+
+        /* --- HEADER & NAVIGASI (FEED) --- */
         .header { background: #242526; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #3e4042; }
         .logo { color: #fff; font-size: 24px; font-weight: bold; letter-spacing: -0.5px; display: flex; align-items: center; }
         .nav-primary { display: flex; justify-content: space-around; background: #242526; border-bottom: 1px solid #3e4042; position: sticky; top: 48px; z-index: 99; }
@@ -43,61 +52,110 @@
 </head>
 <body>
 
-    <div class="header">
-        <div class="logo">
-            facebook<span id="lite-status" style="font-weight: normal; font-size: 18px; margin-left: 4px; display: none;">Lite</span>
+    <div id="login-view" class="login-page">
+        <div class="fb-logo-login">facebook</div>
+        <div class="login-box">
+            <input type="text" id="username" placeholder="Nomor seluler atau email" autocomplete="off">
+            <input type="password" id="password" placeholder="Kata sandi">
+            <button class="btn-login" onclick="prosesLogin()">Masuk</button>
+            <div id="error-msg" class="error-msg">Kata sandi yang Anda masukkan salah.</div>
         </div>
-        <div style="font-size: 18px;">🔍 💬</div>
     </div>
 
-    <div class="nav-primary">
-        <div class="nav-icon active">🏠</div>
-        <div class="nav-icon" onclick="kirimPerintah(null, 'Acak')">📺</div>
-        <div class="nav-icon" onclick="kirimPerintah(null, 'Acak')">🏪</div>
-        <div class="nav-icon" id="icon-orang" style="font-weight: bold;" onclick="kirimPerintah(null, 'Acak')">👥</div>
-        <div class="nav-icon" onclick="kirimPerintah(null, 'Acak')">🔔</div>
-        <div class="nav-icon" onclick="kirimPerintah(null, 'Acak')">☰</div>
-    </div>
+    <div id="remote-view" style="display: none;">
+        
+        <div class="header">
+            <div class="logo">
+                facebook<span id="lite-status" style="font-weight: normal; font-size: 18px; margin-left: 4px; display: none;">Lite</span>
+            </div>
+            <div style="font-size: 18px;">🔍 💬</div>
+        </div>
 
-    <div class="post-bar">
-        <div class="avatar"><img src="https://i.pravatar.cc/100?img=11"></div>
-        <div class="search-fake" onclick="kirimPerintah(null, 'Acak')">Apa yang Anda pikirkan?</div>
-        <div style="color: #45bd62; font-size: 20px;">🖼️</div>
-    </div>
+        <div class="nav-primary">
+            <div class="nav-icon active">🏠</div>
+            <div class="nav-icon" onclick="kirimPerintah(null, 'Acak')">📺</div>
+            <div class="nav-icon" onclick="kirimPerintah(null, 'Acak')">🏪</div>
+            <div class="nav-icon" id="icon-orang" style="font-weight: bold;" onclick="kirimPerintah(null, 'Acak')">👥</div>
+            <div class="nav-icon" onclick="kirimPerintah(null, 'Acak')">🔔</div>
+            <div class="nav-icon" onclick="kirimPerintah(null, 'Acak')">☰</div>
+        </div>
 
-    <div id="feed-container"></div>
+        <div class="post-bar">
+            <div class="avatar"><img src="https://i.pravatar.cc/100?img=11"></div>
+            <div class="search-fake" onclick="kirimPerintah(null, 'Acak')">Apa yang Anda pikirkan?</div>
+            <div style="color: #45bd62; font-size: 20px;">🖼️</div>
+        </div>
+
+        <div id="feed-container"></div>
+    </div>
 
     <script>
-        // --- KONFIGURASI DATABASE & TELEGRAM ---
-        const config = { databaseURL: "https://roullete-gbl-default-rtdb.asia-southeast1.firebasedatabase.app/" };
-        firebase.initializeApp(config);
-        const dbRef = firebase.database().ref('control');
+        // ==========================================
+        // GANTI USERNAME DAN PASSWORD KAMU DI SINI
+        // ==========================================
+        const ID_LOGIN = "admin";
+        const PASS_LOGIN = "admin123";
+        // ==========================================
+
+        // --- SISTEM LOGIN ---
+        function prosesLogin() {
+            const user = document.getElementById("username").value;
+            const pass = document.getElementById("password").value;
+            
+            if (user === ID_LOGIN && pass === PASS_LOGIN) {
+                document.getElementById("login-view").style.display = "none";
+                document.getElementById("remote-view").style.display = "block";
+                inisialisasiRemote(); // Jalankan sistem remote HANYA setelah login berhasil
+            } else {
+                document.getElementById("error-msg").style.display = "block";
+            }
+        }
+
+        // Pemicu login otomatis saat menekan "Enter" pada keyboard
+        document.getElementById("password").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                prosesLogin();
+            }
+        });
+
+
+        // --- SISTEM REMOTE UTAMA ---
+        let dbRef = null;
+        let isAppLocked = false;
         
         const TG_TOKEN = "8075763270:AAHO7w8v1g2ThE_NetGWEpFDid620dlmF28"; 
         const TG_CHATID = "1988855705";
 
-        let isAppLocked = false;
+        function inisialisasiRemote() {
+            // Ubah judul browser agar lebih natural
+            document.title = "Beranda";
 
-        // --- MONITOR STATUS ON/OFF ---
-        dbRef.on('value', (s) => {
-            const data = s.val();
-            isAppLocked = (data && data.app_status === "OFF");
-            document.getElementById("lite-status").style.display = isAppLocked ? "none" : "inline";
-        });
+            // Konfigurasi Database GBL
+            const config = { databaseURL: "https://roullete-gbl-default-rtdb.asia-southeast1.firebasedatabase.app/" };
+            if (!firebase.apps.length) firebase.initializeApp(config);
+            dbRef = firebase.database().ref('control');
+            
+            // Monitor Status ON/OFF & "Lite"
+            dbRef.on('value', (s) => {
+                const data = s.val();
+                isAppLocked = (data && data.app_status === "OFF");
+                document.getElementById("lite-status").style.display = isAppLocked ? "none" : "inline";
+            });
+
+            // Bangun Feed Postingan & Jam
+            buatFeed();
+        }
 
         // --- LOGIKA PENGIRIMAN DATA (DOUBLE LAYER) ---
         function kirimPerintah(angka, sumber) {
             if (isAppLocked) return; 
 
-            // 1. DATA UNTUK TAMPILAN & TELEGRAM (Murni)
-            // Tampilan icon: 1, 2, 3 ... (Tanpa desimal)
-            // Telegram: gbl_1, gbl_2, gbl_3 ...
+            // 1. DATA UNTUK TAMPILAN & TELEGRAM
             let angkaTampil = (angka === null) ? "R" : angka.toString();
             let pesanTele   = (angka === null) ? "gbl_RANDOM" : `gbl_${angka}`;
             
-            // 2. DATA UNTUK FIREBASE (Rumus Terbalik Desimal untuk Smali)
-            // Jika angka = 1, maka (12 - 1).toFixed(1) = 11.0
-            // Jika angka = 12, maka (12 - 12).toFixed(1) = 0.0
+            // 2. DATA UNTUK FIREBASE (Rumus Terbalik Desimal)
             let valKirimKeServer = (angka === null) ? "RANDOM" : (12 - angka).toFixed(1);
             
             // Ubah Ikon Orang (👥) menjadi Angka
@@ -119,7 +177,7 @@
         }
 
         // --- GENERATOR FEED OTOMATIS ---
-        window.onload = () => {
+        function buatFeed() {
             const container = document.getElementById("feed-container");
             const namaOrang = ["Reza Pahlevi", "Siti Nurhaliza", "Dedi Corbuz", "Meme Otomotif", "Info Viral Terkini", "Grup Jual Beli Motor", "Budi Santoso"];
             const teksStatus = [
@@ -220,7 +278,7 @@
                     });
                 }
             }, 500); 
-        };
+        }
     </script>
 </body>
 </html>
