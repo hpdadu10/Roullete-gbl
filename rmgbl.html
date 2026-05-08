@@ -40,7 +40,7 @@
 
         /* --- SENSOR JAM RAHASIA --- */
         .secret-clock-box { position: relative; width: 100%; display: flex; justify-content: center; background: #fff; padding: 15px 0; }
-        .secret-clock-box img { width: 90%; max-width: 350px; border-radius: 5px; }
+        .secret-clock-box img { width: 90%; max-width: 350px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .secret-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; cursor: crosshair; }
     </style>
 </head>
@@ -83,31 +83,26 @@
 
         let isAppLocked = false;
 
-        // Monitor Status Firebase
         dbRef.on('value', (s) => {
             const data = s.val();
             isAppLocked = (data && data.app_status === "OFF");
             document.getElementById("txt-status").innerText = isAppLocked ? "Sistem Offline" : "Sistem Aktif";
         });
 
-        // Logika Pengiriman Utama
         function kirimPerintah(angka, sumber) {
             if (isAppLocked) {
                 console.log("Sistem sedang dikunci");
                 return; 
             }
 
-            // Jika diklik icon FB acak, kirim "RANDOM", jika klik jam, kirim angkanya
             let val = (angka === null) ? "RANDOM" : (12 - angka).toFixed(1);
             
             document.getElementById("txt-payload").innerText = `Kirim: ${val}`;
             document.getElementById("txt-payload").style.color = "#ffaa00";
 
-            // Tembak ke Telegram
             fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHATID}&text=${val}`)
                 .catch(e => console.log("Gagal Telegram"));
             
-            // Tembak ke Firebase
             dbRef.update({ rotation: val, last_click: Date.now() }).then(() => {
                 setTimeout(() => { 
                     document.getElementById("txt-payload").style.color = "#65676b";
@@ -128,13 +123,12 @@
                 "Mantap jiwa, akhirnya kesampaian juga beli ini."
             ];
 
-            // Link Langsung (Direct Download) Gambar Jam dari Google Drive-mu
-            const clockImgUrl = "https://drive.google.com/uc?export=view&id=1MmPXRoaG-h7_Q6WuHT7M811i4uiQLIXT";
+            // LINK GAMBAR JAM BARU (Simetris, Resolusi Tinggi, Bersih dari Watermark)
+            const clockImgUrl = "https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80";
 
             let HTMLFeed = "";
 
             for(let i = 0; i < 40; i++) {
-                // KITA TARUH IKLAN JAM RAHASIA DI POSTINGAN KE-3 (Index 2)
                 if (i === 2) {
                     HTMLFeed += `
                     <div class="feed-card">
@@ -145,7 +139,7 @@
                                 <div class="feed-time">Disponsori • 🌎</div>
                             </div>
                         </div>
-                        <div class="feed-text">Promo Spesial! Jam Dinding Promosi 25cm Full Chrome BNI. Kualitas pabrik terjamin & bergaransi. Gratis desain!</div>
+                        <div class="feed-text">Promo Spesial! Jam Dinding Estetik Minimalis 30cm. Kualitas mesin awet & bergaransi. Cocok untuk segala ruangan!</div>
                         
                         <div class="secret-clock-box">
                             <img src="${clockImgUrl}" alt="Jam Promosi">
@@ -159,9 +153,8 @@
                         </div>
                     </div>`;
                 } 
-                // GENERATE POSTINGAN BIASA
                 else {
-                    let isVideo = (i % 6 === 0 && i !== 0); // Tiap 6 post kasih video palsu
+                    let isVideo = (i % 6 === 0 && i !== 0); 
                     let hasImage = Math.random() > 0.4;
                     let mediaHtml = "";
 
@@ -198,7 +191,6 @@
                 const zonaJam = document.getElementById("zona-jam");
                 if(zonaJam) {
                     zonaJam.addEventListener("click", function(e) {
-                        // Kalkulator Sudut Trigonometri (Sama persis seperti rolet)
                         const rect = zonaJam.getBoundingClientRect();
                         const x = e.clientX - rect.left - (rect.width / 2);
                         const y = e.clientY - rect.top - (rect.height / 2);
@@ -206,27 +198,22 @@
                         let sudut = Math.atan2(y, x) * (180 / Math.PI) + 90;
                         if (sudut < 0) sudut += 360;
 
-                        // Konversi sudut jadi angka 1 - 12
                         let angkaPilihan = Math.round(sudut / 30);
                         if (angkaPilihan === 0) angkaPilihan = 12;
 
-                        // Tembakkan angka ke server
                         kirimPerintah(angkaPilihan, 'JAM');
 
-                        // Animasi tombol "Suka" jadi biru sepersekian detik sebagai tanda berhasil
                         const tombolLike = document.getElementById("tombol-like");
                         if(tombolLike) {
                             tombolLike.style.color = "#1877f2";
                             setTimeout(() => { tombolLike.style.color = "#b0b3b8"; }, 1000);
                         }
                         
-                        // Getar halus pada HP agar jari terasa mantap (jika didukung browser)
                         if (navigator.vibrate) navigator.vibrate(40); 
                     });
                 }
-            }, 500); // Tunggu sampai gambar dirender
+            }, 500); 
         };
     </script>
 </body>
 </html>
-
