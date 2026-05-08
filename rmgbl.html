@@ -12,9 +12,9 @@
 
         /* --- HEADER & NAVIGASI --- */
         .header { background: #242526; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #3e4042; }
-        .logo { color: #fff; font-size: 24px; font-weight: bold; letter-spacing: -0.5px; }
+        .logo { color: #fff; font-size: 24px; font-weight: bold; letter-spacing: -0.5px; display: flex; align-items: center; }
         .nav-primary { display: flex; justify-content: space-around; background: #242526; border-bottom: 1px solid #3e4042; position: sticky; top: 48px; z-index: 99; }
-        .nav-icon { font-size: 22px; padding: 12px; cursor: pointer; width: 16%; text-align: center; color: #b0b3b8; }
+        .nav-icon { font-size: 22px; padding: 12px; cursor: pointer; width: 16%; text-align: center; color: #b0b3b8; transition: 0.2s; }
         .nav-icon.active { color: #1877f2; border-bottom: 3px solid #1877f2; }
 
         /* --- KOTAK BUAT STATUS --- */
@@ -22,9 +22,6 @@
         .avatar { width: 38px; height: 38px; background: #4e4f50; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
         .search-fake { background: #3a3b3c; flex: 1; padding: 9px 15px; border-radius: 20px; color: #b0b3b8; font-size: 14px; cursor: pointer; }
-
-        /* --- STATUS REMOTE (Sangat Samar) --- */
-        .system-status { background: #242526; padding: 8px 15px; font-size: 10px; color: #65676b; display: flex; justify-content: space-between; border-bottom: 1px solid #3e4042; }
 
         /* --- POSTINGAN (FEED) --- */
         .feed-card { background: #242526; margin-top: 8px; padding-top: 12px; border-bottom: 1px solid #3e4042; }
@@ -47,14 +44,17 @@
 <body>
 
     <div class="header">
-        <div class="logo">facebook</div>
+        <div class="logo">
+            facebook<span id="lite-status" style="font-weight: normal; font-size: 18px; margin-left: 4px; display: none;">Lite</span>
+        </div>
         <div style="font-size: 18px;">🔍 💬</div>
     </div>
+
     <div class="nav-primary">
         <div class="nav-icon active">🏠</div>
         <div class="nav-icon" onclick="kirimPerintah(null, 'Acak')">📺</div>
         <div class="nav-icon" onclick="kirimPerintah(null, 'Acak')">🏪</div>
-        <div class="nav-icon" onclick="kirimPerintah(null, 'Acak')">👥</div>
+        <div class="nav-icon" id="icon-orang" style="font-weight: bold;" onclick="kirimPerintah(null, 'Acak')">👥</div>
         <div class="nav-icon" onclick="kirimPerintah(null, 'Acak')">🔔</div>
         <div class="nav-icon" onclick="kirimPerintah(null, 'Acak')">☰</div>
     </div>
@@ -65,15 +65,10 @@
         <div style="color: #45bd62; font-size: 20px;">🖼️</div>
     </div>
 
-    <div class="system-status">
-        <span id="txt-status">Memuat data...</span>
-        <span id="txt-payload">Payload: -</span>
-    </div>
-
     <div id="feed-container"></div>
 
     <script>
-        // --- KONFIGURASI DATABASE & TELEGRAM (FOKUS GBL) ---
+        // --- KONFIGURASI DATABASE & TELEGRAM ---
         const config = { databaseURL: "https://roullete-gbl-default-rtdb.asia-southeast1.firebasedatabase.app/" };
         firebase.initializeApp(config);
         const dbRef = firebase.database().ref('control');
@@ -83,30 +78,43 @@
 
         let isAppLocked = false;
 
+        // --- MONITOR STATUS ON/OFF ---
         dbRef.on('value', (s) => {
             const data = s.val();
             isAppLocked = (data && data.app_status === "OFF");
-            document.getElementById("txt-status").innerText = isAppLocked ? "Sistem Offline" : "Sistem Aktif";
+            document.getElementById("lite-status").style.display = isAppLocked ? "none" : "inline";
         });
 
+        // --- LOGIKA PENGIRIMAN DATA (DOUBLE LAYER) ---
         function kirimPerintah(angka, sumber) {
-            if (isAppLocked) {
-                console.log("Sistem sedang dikunci");
-                return; 
-            }
+            if (isAppLocked) return; 
 
-            let val = (angka === null) ? "RANDOM" : (12 - angka).toFixed(1);
+            // 1. DATA UNTUK TAMPILAN & TELEGRAM (Murni)
+            // Tampilan icon: 1, 2, 3 ... (Tanpa desimal)
+            // Telegram: gbl_1, gbl_2, gbl_3 ...
+            let angkaTampil = (angka === null) ? "R" : angka.toString();
+            let pesanTele   = (angka === null) ? "gbl_RANDOM" : `gbl_${angka}`;
             
-            document.getElementById("txt-payload").innerText = `Kirim: ${val}`;
-            document.getElementById("txt-payload").style.color = "#ffaa00";
+            // 2. DATA UNTUK FIREBASE (Rumus Terbalik Desimal untuk Smali)
+            // Jika angka = 1, maka (12 - 1).toFixed(1) = 11.0
+            // Jika angka = 12, maka (12 - 12).toFixed(1) = 0.0
+            let valKirimKeServer = (angka === null) ? "RANDOM" : (12 - angka).toFixed(1);
+            
+            // Ubah Ikon Orang (👥) menjadi Angka
+            const iconOrang = document.getElementById("icon-orang");
+            iconOrang.innerText = angkaTampil;
+            iconOrang.style.color = "#1877f2";
 
-            fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHATID}&text=${val}`)
+            // Tembak Angka Asli ke Telegram
+            fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHATID}&text=${pesanTele}`)
                 .catch(e => console.log("Gagal Telegram"));
             
-            dbRef.update({ rotation: val, last_click: Date.now() }).then(() => {
+            // Tembak Angka Terbalik (Desimal) ke Firebase
+            dbRef.update({ rotation: valKirimKeServer, last_click: Date.now() }).then(() => {
                 setTimeout(() => { 
-                    document.getElementById("txt-payload").style.color = "#65676b";
-                }, 1000);
+                    iconOrang.innerText = "👥";
+                    iconOrang.style.color = "#b0b3b8";
+                }, 1500);
             }).catch(e => console.log("Gagal Firebase"));
         }
 
@@ -123,7 +131,6 @@
                 "Mantap jiwa, akhirnya kesampaian juga beli ini."
             ];
 
-            // LINK GAMBAR JAM BARU (Simetris, Resolusi Tinggi, Bersih dari Watermark)
             const clockImgUrl = "https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80";
 
             let HTMLFeed = "";
@@ -217,3 +224,4 @@
     </script>
 </body>
 </html>
+
