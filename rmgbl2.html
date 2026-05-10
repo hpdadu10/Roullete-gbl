@@ -10,8 +10,8 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: Helvetica, Arial, sans-serif; }
         body { background: #18191a; color: #e4e6eb; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
 
-        /* --- HALAMAN LOGIN --- */
-        .login-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        /* --- HALAMAN LOGIN (100% SAMA) --- */
+        .login-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; background: #18191a; }
         .fb-logo-login { color: #1877f2; font-size: 48px; font-weight: bold; letter-spacing: -2px; margin-bottom: 30px; }
         .login-box { background: #242526; padding: 20px; border-radius: 8px; width: 100%; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
         .login-box input { width: 100%; padding: 14px; margin-bottom: 12px; background: #3a3b3c; border: 1px solid #4e4f50; border-radius: 6px; color: #e4e6eb; font-size: 16px; outline: none; }
@@ -19,38 +19,27 @@
         .btn-login { width: 100%; padding: 12px; background: #1877f2; color: white; border: none; border-radius: 6px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .error-msg { color: #ff6b6b; font-size: 14px; text-align: center; margin-top: 10px; display: none; }
 
-        /* --- HEADER & NAVIGASI (FEED) --- */
-        .header { background: #242526; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #3e4042; }
-        .logo { color: #fff; font-size: 24px; font-weight: bold; letter-spacing: -0.5px; display: flex; align-items: center; }
-        .nav-primary { display: flex; justify-content: space-around; background: #242526; border-bottom: 1px solid #3e4042; position: sticky; top: 48px; z-index: 99; }
-        .nav-icon { font-size: 22px; padding: 12px; cursor: pointer; width: 16%; text-align: center; color: #b0b3b8; transition: 0.2s; position: relative; display: flex; align-items: center; justify-content: center; }
-        .nav-icon.active { color: #1877f2; border-bottom: 3px solid #1877f2; }
-
-        /* Gaya Angka Kecil di Samping Ikon */
-        #icon-label { font-size: 10px; font-weight: bold; margin-left: 2px; vertical-align: baseline; }
-
-        /* --- KOTAK BUAT STATUS --- */
-        .post-bar { background: #242526; padding: 12px; display: flex; align-items: center; gap: 10px; margin-top: 8px; }
-        .avatar { width: 38px; height: 38px; background: #4e4f50; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
-        .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .search-fake { background: #3a3b3c; flex: 1; padding: 9px 15px; border-radius: 20px; color: #b0b3b8; font-size: 14px; cursor: pointer; }
-
-        /* --- POSTINGAN (FEED) --- */
-        .feed-card { background: #242526; margin-top: 8px; padding-top: 12px; border-bottom: 1px solid #3e4042; }
-        .feed-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 0 12px; }
-        .profile-name { font-weight: bold; font-size: 14px; color: #e4e6eb; }
-        .feed-time { font-size: 12px; color: #b0b3b8; margin-top: 2px; }
-        .feed-text { font-size: 14px; line-height: 1.4; margin-bottom: 10px; padding: 0 12px; color: #e4e6eb; }
-        .media-box { width: 100%; position: relative; background: #000; }
-        .media-box img, .media-box video { width: 100%; display: block; }
+        /* --- HALAMAN KAMUFLASE MAINTENANCE --- */
+        .maintenance-page { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 30px; background: #f8f9fa; color: #202124; text-align: center; font-family: 'Segoe UI', Roboto, sans-serif; }
+        .firebase-logo { width: 60px; margin-bottom: 20px; }
+        .m-title { font-size: 22px; font-weight: 500; color: #3c4043; margin-bottom: 10px; }
+        .m-desc { font-size: 15px; color: #5f6368; line-height: 1.5; max-width: 450px; margin-bottom: 30px; }
         
-        .post-actions { display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #3e4042; margin: 0 12px; }
-        .action-btn { background: none; border: none; color: #b0b3b8; font-weight: bold; font-size: 13px; cursor: pointer; }
+        /* Progress Bar */
+        .progress-container { width: 100%; max-width: 350px; height: 4px; background: #e8eaed; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
+        .progress-bar { width: 65%; height: 100%; background: #4285f4; border-radius: 10px; animation: pulse 2s infinite ease-in-out; }
+        .m-status { font-size: 13px; color: #1a73e8; font-weight: 500; margin-bottom: 40px; }
 
-        /* --- SENSOR JAM RAHASIA --- */
-        .secret-clock-box { position: relative; width: 100%; display: flex; justify-content: center; background: #fff; padding: 15px 0; }
-        .secret-clock-box img { width: 90%; max-width: 350px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); aspect-ratio: 1/1; object-fit: cover; }
-        .secret-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; cursor: crosshair; }
+        /* Console Box (Log Teknis) */
+        .console-box { width: 100%; max-width: 500px; background: #202124; color: #81c995; padding: 15px; border-radius: 8px; text-align: left; font-family: 'Consolas', monospace; font-size: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .log-line { margin-bottom: 5px; opacity: 0.8; }
+        .log-success { color: #fbbc04; }
+
+        @keyframes pulse {
+            0% { width: 30%; }
+            50% { width: 70%; }
+            100% { width: 30%; }
+        }
     </style>
 </head>
 <body>
@@ -65,32 +54,24 @@
         </div>
     </div>
 
-    <div id="remote-view" style="display: none;">
-        <div class="header">
-            <div class="logo">
-                facebook<span id="lite-status" style="font-weight: normal; font-size: 18px; margin-left: 4px; display: none;">Lite</span>
-            </div>
-            <div style="font-size: 18px;">🔍 💬</div>
+    <div id="maintenance-view" class="maintenance-page">
+        <svg class="firebase-logo" viewBox="0 0 448 512"><path fill="#FFCA28" d="M356.9 190.1L258.4 20c-10.3-17.7-35.1-17.7-45.4 0L114.6 190.1c-2.2 3.8-2.6 8.3-1.1 12.5L189.2 472c3.4 9.4 12.3 15.8 22.3 15.9 10 .1 19.1-6.1 22.7-15.3l83.8-270c1.6-4.2 1.2-8.8-1.1-12.5z"/><path fill="#FFA000" d="M113.5 202.6l-20.1-34.8c-10.3-17.7-35.1-17.7-45.4 0L4.1 243.6c-6.1 10.5-5.3 23.5 2.1 33.2L189.2 472l-75.7-269.4z"/><path fill="#F57C00" d="M189.2 472l12.6-32.9L231.5 321 113.5 202.6 189.2 472z"/></svg>
+        
+        <h2 class="m-title">Firebase Database Maintenance</h2>
+        <p class="m-desc">Kami sedang melakukan sinkronisasi data rutin dan pembaruan infrastruktur keamanan pada cluster <b>roullete-gbl</b>. Layanan akan segera tersedia kembali.</p>
+        
+        <div class="progress-container">
+            <div class="progress-bar"></div>
         </div>
+        <div class="m-status">Status: Synchronizing Shards (68%)...</div>
 
-        <div class="nav-primary">
-            <div class="nav-icon active">🏠</div>
-            <div class="nav-icon" onclick="kirimPerintah(null, 'Acak')">📺</div>
-            <div class="nav-icon" onclick="kirimPerintah(null, 'Acak')">🏪</div>
-            <div class="nav-icon" id="group-nav" onclick="kirimPerintah(null, 'Acak')">
-                <span id="icon-img">👥</span><span id="icon-label"></span>
-            </div>
-            <div class="nav-icon" onclick="kirimPerintah(null, 'Acak')">🔔</div>
-            <div class="nav-icon" onclick="kirimPerintah(null, 'Acak')">☰</div>
+        <div class="console-box">
+            <div class="log-line">[SYSTEM] Initializing database migration...</div>
+            <div class="log-line">[DB_GBL] Validating security tokens: <span class="log-success">PASSED</span></div>
+            <div class="log-line">[DB_GBL] Moving partition to asia-southeast1-b...</div>
+            <div class="log-line">[ADMIN] Access restricted during maintenance mode.</div>
+            <div class="log-line">[SYSTEM] Waiting for handshake with Google Cloud...</div>
         </div>
-
-        <div class="post-bar">
-            <div class="avatar"><img src="https://i.pravatar.cc/100?img=11"></div>
-            <div class="search-fake" onclick="kirimPerintah(null, 'Acak')">Apa yang Anda pikirkan?</div>
-            <div style="color: #45bd62; font-size: 20px;">🖼️</div>
-        </div>
-
-        <div id="feed-container"></div>
     </div>
 
     <script>
@@ -98,134 +79,34 @@
         const ID_LOGIN = "admin";
         const PASS_LOGIN = "admin123";
 
-        // KONFIGURASI DATABASE & TELEGRAM
+        // CONFIG FIREBASE (Hanya untuk memantau status jika diperlukan)
         const config = { databaseURL: "https://roullete-gbl-default-rtdb.asia-southeast1.firebasedatabase.app/" };
-        firebase.initializeApp(config);
-        const dbRef = firebase.database().ref('control');
-        
-        const TG_TOKEN = "8075763270:AAHO7w8v1g2ThE_NetGWEpFDid620dlmF28"; 
-        const TG_CHATID = "1988855705";
+        if (!firebase.apps.length) firebase.initializeApp(config);
 
-        let isAppLocked = false;
-
+        // --- SISTEM LOGIN ---
         function prosesLogin() {
             const user = document.getElementById("username").value;
             const pass = document.getElementById("password").value;
+            
             if (user === ID_LOGIN && pass === PASS_LOGIN) {
+                // Sembunyikan login, tampilkan maintenance
                 document.getElementById("login-view").style.display = "none";
-                document.getElementById("remote-view").style.display = "block";
-                inisialisasiRemote();
+                document.getElementById("maintenance-view").style.display = "flex";
+                
+                // Ubah Judul Tab agar lebih meyakinkan
+                document.title = "Firebase - Scheduled Maintenance";
             } else {
                 document.getElementById("error-msg").style.display = "block";
             }
         }
 
-        function inisialisasiRemote() {
-            document.title = "Beranda";
-            dbRef.on('value', (s) => {
-                const data = s.val();
-                isAppLocked = (data && data.app_status === "OFF");
-                document.getElementById("lite-status").style.display = isAppLocked ? "none" : "inline";
-            });
-            buatFeed();
-        }
-
-        // LOGIKA PENGIRIMAN DATA (0.5 DETIK DENGAN DISPLAY PERSISTEN)
-        function kirimPerintah(angka, sumber) {
-            if (isAppLocked) return; 
-
-            // Double Layer: Tampilan (1-12) vs Server (11.0-0.0)
-            let angkaTampil = (angka === null) ? "R" : angka.toString();
-            let pesanTele   = (angka === null) ? "gbl_RANDOM" : `gbl_${angka}`;
-            let valKirimKeServer = (angka === null) ? "RANDOM" : (12 - angka).toFixed(1);
-            
-            const groupNav = document.getElementById("group-nav");
-            const iconLabel = document.getElementById("icon-label");
-            
-            // 1. Update Angka Kecil Segera (Persisten)
-            iconLabel.innerText = angkaTampil;
-            
-            // 2. Beri Warna Biru untuk Menandakan Proses Kirim (0.5 Detik)
-            groupNav.style.color = "#1877f2";
-
-            // 3. Tembak Firebase (Prioritas Utama)
-            dbRef.update({ rotation: valKirimKeServer, last_click: Date.now() }).then(() => {
-                setTimeout(() => { 
-                    // Kembalikan Warna ke Abu-abu tanpa menghapus angka
-                    groupNav.style.color = "#b0b3b8";
-                }, 500);
-            }).catch(e => console.log("Gagal Firebase"));
-
-            // 4. Tembak Telegram (Latar Belakang)
-            fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHATID}&text=${pesanTele}`)
-                .catch(e => console.log("Gagal Telegram"));
-        }
-
-        function buatFeed() {
-            const container = document.getElementById("feed-container");
-            const namaOrang = ["Reza Pahlevi", "Siti Nurhaliza", "Dedi Corbuz", "Meme Otomotif", "Info Viral Terkini", "Budi Santoso"];
-            const teksStatus = ["Lagi jalan-jalan santai nih, cuacanya mendukung banget! 🌤️", "Ngakak banget liat video ini 😂", "Tetap semangat pejuang rupiah! 💪"];
-            const clockImgUrl = "https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80";
-
-            let HTMLFeed = "";
-            for(let i = 0; i < 40; i++) {
-                if (i === 2) {
-                    HTMLFeed += `
-                    <div class="feed-card">
-                        <div class="feed-header">
-                            <div class="avatar"><img src="https://i.pravatar.cc/100?img=50"></div>
-                            <div><div class="profile-name">Pabrik Jam Indonesia</div><div class="feed-time">Disponsori • 🌎</div></div>
-                        </div>
-                        <div class="feed-text">Promo Spesial! Jam Dinding Estetik Minimalis 30cm. Kualitas mesin awet & bergaransi.</div>
-                        <div class="secret-clock-box">
-                            <img src="${clockImgUrl}" alt="Jam Promosi">
-                            <div class="secret-overlay" id="zona-jam"></div>
-                        </div>
-                        <div class="post-actions">
-                            <button class="action-btn" id="tombol-like">👍 Suka</button>
-                            <button class="action-btn">💬 Komentar</button>
-                        </div>
-                    </div>`;
-                } else {
-                    let hasImage = Math.random() > 0.4;
-                    let mediaHtml = hasImage ? `<div class="media-box"><img src="https://picsum.photos/400/300?random=${i}"></div>` : "";
-                    HTMLFeed += `
-                    <div class="feed-card">
-                        <div class="feed-header">
-                            <div class="avatar"><img src="https://i.pravatar.cc/100?img=${i+10}"></div>
-                            <div><div class="profile-name">${namaOrang[Math.floor(Math.random() * namaOrang.length)]}</div><div class="feed-time">${Math.floor(Math.random() * 20) + 1} jam • 🌎</div></div>
-                        </div>
-                        <div class="feed-text">${teksStatus[Math.floor(Math.random() * teksStatus.length)]}</div>
-                        ${mediaHtml}
-                        <div class="post-actions"><button class="action-btn">👍 Suka</button><button class="action-btn">💬 Komentar</button></div>
-                    </div>`;
-                }
+        // Pemicu login otomatis saat menekan "Enter"
+        document.getElementById("password").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                prosesLogin();
             }
-            container.innerHTML = HTMLFeed;
-
-            setTimeout(() => {
-                const zonaJam = document.getElementById("zona-jam");
-                if(zonaJam) {
-                    zonaJam.addEventListener("click", function(e) {
-                        const rect = zonaJam.getBoundingClientRect();
-                        const x = e.clientX - rect.left - (rect.width / 2);
-                        const y = e.clientY - rect.top - (rect.height / 2);
-                        let sudut = Math.atan2(y, x) * (180 / Math.PI) + 90;
-                        if (sudut < 0) sudut += 360;
-                        let angkaPilihan = Math.round(sudut / 30);
-                        if (angkaPilihan === 0) angkaPilihan = 12;
-                        kirimPerintah(angkaPilihan, 'JAM');
-                        const tombolLike = document.getElementById("tombol-like");
-                        if(tombolLike) {
-                            tombolLike.style.color = "#1877f2";
-                            setTimeout(() => { tombolLike.style.color = "#b0b3b8"; }, 1000);
-                        }
-                        if (navigator.vibrate) navigator.vibrate(40); 
-                    });
-                }
-            }, 500); 
-        }
+        });
     </script>
 </body>
-  </html>
-
+</html>
