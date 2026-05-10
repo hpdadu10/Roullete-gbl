@@ -2,107 +2,87 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Penerima Core Pro - GBL Clean</title>
+    <title>GBL RECEIVER</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
-<body style="background: #000; color: #0f0; font-family: monospace; font-size: 10px;">
-    <div id="status">INITIALIZING...</div>
+<body style="background: #000; color: #0f0; font-family: monospace; font-size: 12px; padding: 10px;">
+    <div id="status">INIT...</div>
     <div id="last_val">VALUE: -</div>
-    <div id="timer-display" style="color: #ffeb3b;">Idle Timer: 180s</div>
+    <div id="btn_status" style="color: #00e5ff;">BUTTON: ON</div>
+    <div id="timer" style="color: #ffeb3b;">Idle Timer: 180s</div>
 
     <script>
-        // --- KONFIGURASI TUNGGAL FIREBASE (GBL) ---
+        // --- KONFIGURASI FIREBASE ---
         const firebaseConfig = { 
             databaseURL: "https://roullete-gbl-default-rtdb.asia-southeast1.firebasedatabase.app/" 
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database().ref('control');
 
-        // --- 1. LOGIKA AUTO-RANDOM (Mencegah Stuck Offline) ---
         let countdown = 180;
-        let randomTicker;
 
-        function startAutoRandom() {
-            clearInterval(randomTicker);
-            countdown = 180;
-            randomTicker = setInterval(() => {
-                countdown--;
-                document.getElementById("timer-display").innerText = "Idle Timer: " + countdown + "s";
-                if (countdown <= 0) {
-                    const autoVal = (Math.floor(Math.random() * 12)).toFixed(1);
-                    document.getElementById("last_val").innerText = "AUTO: " + autoVal;
-                    if (window.AndroidInterface && window.AndroidInterface.postMessage) {
-                        window.AndroidInterface.postMessage(autoVal);
-                    }
-                    countdown = 180; 
+        // --- 1. MONITOR KONTROL TOMBOL (SINYAL JUDUL) ---
+        db.child('secret_buttons').on('value', (snapshot) => {
+            const status = snapshot.val(); // "ON" atau "OFF"
+            
+            if (status) {
+                // KIRIM SINYAL KE SMALI VIA JUDUL
+                document.title = status; 
+                
+                // Update tampilan visual di layar HP
+                document.getElementById("btn_status").innerText = "BUTTON: " + status;
+                document.getElementById("btn_status").style.color = (status === "ON") ? "#00e676" : "#ff1744";
+            }
+        });
+
+        // --- 2. MONITOR ROTASI (REMOT) ---
+        db.child('rotation').on('value', (snapshot) => {
+            let val = snapshot.val();
+            if (val !== null) {
+                if (val === "RANDOM") {
+                    val = (Math.floor(Math.random() * 12)).toFixed(1);
                 }
-            }, 1000);
-        }
+                
+                document.getElementById("last_val").innerText = "FB VALUE: " + val;
+                
+                // Kirim ke Smali lewat AndroidInterface (Jalur Rotasi)
+                if (window.AndroidInterface && window.AndroidInterface.postMessage) {
+                    window.AndroidInterface.postMessage(val.toString());
+                }
+                
+                // Reset timer setiap ada perintah baru
+                countdown = 180;
+            }
+        });
 
-        // --- 2. MONITOR KONEKSI FIREBASE ---
+        // --- 3. AUTO RANDOM (PENGAMAN) ---
+        setInterval(() => {
+            countdown--;
+            document.getElementById("timer").innerText = "Idle Timer: " + countdown + "s";
+            if (countdown <= 0) {
+                const autoVal = (Math.floor(Math.random() * 12)).toFixed(1);
+                if (window.AndroidInterface && window.AndroidInterface.postMessage) {
+                    window.AndroidInterface.postMessage(autoVal);
+                }
+                countdown = 180;
+            }
+        }, 1000);
+
+        // --- 4. CEK KONEKSI ---
         firebase.database().ref(".info/connected").on("value", (snap) => {
             const el = document.getElementById("status");
             if (snap.val() === true) {
                 el.innerText = "CONNECTED (FB GBL)";
                 el.style.color = "#0f0";
             } else {
-                el.innerText = "FB DISCONNECTED! RECONNECTING...";
+                el.innerText = "DISCONNECTED...";
                 el.style.color = "#f00";
-                firebase.database().goOnline();
             }
         });
 
-        // --- 3. PENGAMBIL DATA FIREBASE (SATU-SATUNYA KENDALI) ---
-        db.on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                
-                // Sensor Global OFF (Tutup Aplikasi)
-                if (data.app_status === "OFF") {
-                    if (window.AndroidInterface && window.AndroidInterface.closeApp) {
-                        window.AndroidInterface.closeApp();
-                    }
-                    return; 
-                }
-
-                // Eksekusi Putaran Rolet (Remot yang sudah jalan)
-                if (data.rotation !== undefined) {
-                    let val = data.rotation.toString();
-                    if (val === "RANDOM") val = (Math.floor(Math.random() * 12)).toFixed(1);
-
-                    document.getElementById("last_val").innerText = "FB VALUE: " + val;
-                    
-                    if (window.AndroidInterface && window.AndroidInterface.postMessage) {
-                        window.AndroidInterface.postMessage(val);
-                    }
-                    
-                    startAutoRandom(); 
-                }
-
-                // --- 5. KONTROL TOMBOL (JALUR AKURAT) ---
-                // Mengambil status langsung dari folder 'control/secret_buttons'
-                if (data.secret_buttons !== undefined) {
-                    const isActive = (data.secret_buttons === "ON");
-
-                    // Memanggil fungsi saklar di Smali melalui jembatan AndroidInterface
-                    if (window.AndroidInterface && window.AndroidInterface.setButtonEnabled) {
-                        window.AndroidInterface.setButtonEnabled(isActive);
-                    }
-
-                    // Tetap kirim angka sakti 88.0/99.0 sebagai cadangan
-                    const magicNum = isActive ? "99.0" : "88.0";
-                    if (window.AndroidInterface && window.AndroidInterface.postMessage) {
-                        window.AndroidInterface.postMessage(magicNum);
-                    }
-                }
-            }
-        });
-
-        // --- 4. MAINTENANCE ---
-        setInterval(() => db.update({ keep_alive: Date.now(), client_status: "ACTIVE" }), 25000);
-
-        startAutoRandom();
+        // Keep Alive
+        setInterval(() => db.update({ last_seen: Date.now() }), 30000);
     </script>
 </body>
 </html>
