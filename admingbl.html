@@ -2,94 +2,88 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Admin Panel - Magic Number Control</title>
+    <title>Admin Panel - Button Lock Control</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         body { 
             background: #121212; 
             color: #ffffff; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-family: sans-serif; 
             text-align: center; 
             padding: 50px 20px; 
         }
-        h2 { color: #00bcd4; margin-bottom: 40px; font-size: 24px; text-transform: uppercase; letter-spacing: 2px; }
+        h2 { color: #00bcd4; margin-bottom: 30px; }
         .btn-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 25px;
+            gap: 20px;
         }
         .btn { 
-            padding: 20px 40px; 
+            padding: 20px; 
             font-size: 18px; 
             font-weight: bold; 
             cursor: pointer; 
             border: none; 
-            border-radius: 12px; 
-            width: 90%;
-            max-width: 350px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            transition: all 0.2s ease;
+            border-radius: 10px; 
+            width: 100%;
+            max-width: 300px;
             text-transform: uppercase;
         }
-        .btn:active { transform: scale(0.95); box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        .btn-on { background: linear-gradient(135deg, #2ecc71, #27ae60); color: #fff; }
-        .btn-off { background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff; }
+        .btn-on { background: #2ecc71; color: #000; }
+        .btn-off { background: #e74c3c; color: #fff; }
         
         .status-box {
-            margin-top: 50px;
-            padding: 20px;
+            margin-top: 40px;
+            padding: 15px;
             background: #1e1e1e;
-            border-radius: 12px;
+            border-radius: 8px;
             display: inline-block;
-            min-width: 250px;
-            border: 1px solid #333;
         }
-        .status-title { font-size: 12px; color: #888; margin-bottom: 10px; letter-spacing: 1px; }
-        .status-value { font-size: 28px; font-weight: bold; }
+        #status-display { font-size: 20px; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <h2>KONTROL VISIBILITAS TOMBOL</h2>
+    <h2>KONTROL AKTIVASI TOMBOL</h2>
     
     <div class="btn-container">
-        <button class="btn btn-on" onclick="sendMagicCommand('ON')">MUNCULKAN TOMBOL</button>
-        <button class="btn btn-off" onclick="sendMagicCommand('OFF')">SEMBUNYIKAN SEMUA</button>
+        <button class="btn btn-on" onclick="updateButtonControl('ON')">AKTIFKAN TOMBOL (ON)</button>
+        
+        <button class="btn btn-off" onclick="updateButtonControl('OFF')">NONAKTIFKAN TOMBOL (OFF)</button>
     </div>
 
     <div class="status-box">
-        <div class="status-title">STATUS TOMBOL DI HP SAAT INI</div>
-        <div id="status-display" class="status-value" style="color: #ffeb3b;">SINKRONISASI...</div>
+        <div>STATUS SAAT INI:</div>
+        <div id="status-display">LOADING...</div>
     </div>
 
     <script>
-        // --- KONFIGURASI FIREBASE GBL ---
+        // Gunakan URL Database yang sama dengan receiver.html
         const firebaseConfig = { 
             databaseURL: "https://roullete-gbl-default-rtdb.asia-southeast1.firebasedatabase.app/" 
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database().ref('control');
 
-        // --- FUNGSI KIRIM PERINTAH KE FIREBASE ---
-        function sendMagicCommand(statusCommand) {
-            db.update({ secret_buttons: statusCommand })
-              .catch((error) => {
-                  alert("Gagal mengirim perintah! Periksa koneksi internet.");
-              });
+        // Fungsi untuk merubah status di Firebase
+        function updateButtonControl(status) {
+            db.update({ secret_buttons: status })
+              .then(() => console.log("Status berhasil diupdate ke: " + status))
+              .catch((err) => alert("Gagal update Firebase!"));
         }
 
-        // --- MONITOR STATUS REAL-TIME ---
+        // Monitor perubahan status secara real-time
         db.child('secret_buttons').on('value', (snapshot) => {
-            const currentStatus = snapshot.val();
+            const val = snapshot.val();
             const display = document.getElementById("status-display");
             
-            if (currentStatus === "OFF") {
-                display.innerText = "HILANG (OFF)";
+            if (val === "OFF") {
+                display.innerText = "OFF (TERKUNCI)";
                 display.style.color = "#e74c3c";
             } else {
-                display.innerText = "MUNCUL (ON)";
+                display.innerText = "ON (AKTIF)";
                 display.style.color = "#2ecc71";
             }
         });
