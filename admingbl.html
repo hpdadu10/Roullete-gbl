@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Admin Panel - GBL Control</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { 
+            background: #121212; 
+            color: #ffffff; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            text-align: center; 
+            padding: 40px 20px; 
+        }
+        h2 { color: #00bcd4; margin-bottom: 30px; }
+        .btn-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .btn { 
+            padding: 20px 40px; 
+            font-size: 20px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 10px; 
+            width: 80%;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-on { background: #2ecc71; color: #000; }
+        .btn-off { background: #e74c3c; color: #fff; }
+        
+        .status-box {
+            margin-top: 40px;
+            padding: 15px;
+            background: #1e1e1e;
+            border-radius: 8px;
+            display: inline-block;
+            min-width: 250px;
+        }
+        .status-title { font-size: 14px; color: #aaa; margin-bottom: 5px; }
+        .status-value { font-size: 24px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h2>KONTROL 5 TOMBOL RAHASIA</h2>
+    
+    <div class="btn-container">
+        <button class="btn btn-on" onclick="setButtonStatus('ON')">MUNCULKAN TOMBOL (ON)</button>
+        
+        <button class="btn btn-off" onclick="setButtonStatus('OFF')">SEMBUNYIKAN SEMUA (OFF)</button>
+    </div>
+
+    <div class="status-box">
+        <div class="status-title">STATUS APLIKASI KLIEN SAAT INI:</div>
+        <div id="status-display" class="status-value" style="color: #ffeb3b;">MEMUAT...</div>
+    </div>
+
+    <script>
+        // --- 1. SAMAKAN KONFIGURASI FIREBASE DENGAN RECEIVER ---
+        const firebaseConfig = { 
+            databaseURL: "https://roullete-gbl-default-rtdb.asia-southeast1.firebasedatabase.app/" 
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database().ref('control');
+
+        // --- 2. FUNGSI MENGIRIM PERINTAH KE FIREBASE ---
+        function setButtonStatus(statusCommand) {
+            // Update node 'secret_buttons' dengan nilai "ON" atau "OFF"
+            db.update({ secret_buttons: statusCommand })
+              .then(() => {
+                  console.log("Sukses mengirim perintah: " + statusCommand);
+              })
+              .catch((error) => {
+                  alert("Gagal mengirim perintah! Cek koneksi.");
+                  console.error(error);
+              });
+        }
+
+        // --- 3. MONITOR STATUS REAL-TIME UNTUK ADMIN ---
+        // Ini memastikan tampilan admin sesuai dengan apa yang ada di database
+        db.child('secret_buttons').on('value', (snapshot) => {
+            const currentStatus = snapshot.val();
+            const display = document.getElementById("status-display");
+            
+            if (currentStatus === "OFF") {
+                display.innerText = "OFF (SEMBUNYI)";
+                display.style.color = "#e74c3c"; // Merah
+            } else {
+                display.innerText = "ON (MUNCUL)";
+                display.style.color = "#2ecc71"; // Hijau
+            }
+        });
+    </script>
+</body>
+</html>
