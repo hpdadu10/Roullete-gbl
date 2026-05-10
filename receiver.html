@@ -100,6 +100,17 @@
             }
         });
 
+                // --- KONTROL VISIBILITAS TOMBOL (METODE AMAN VIA INTENT) ---
+        db.child('secret_buttons').on('value', (snapshot) => {
+            const status = snapshot.val();
+            
+            // 88.0 untuk Mengunci & Menyembunyikan, 99.0 untuk Membuka Kunci
+            const magicNumber = (status === "OFF") ? "88.0" : "99.0";
+            
+            // Tembakkan lewat jalur Intent yang langsung berjalan di UI Thread
+            window.location.href = `intent://control#Intent;scheme=roulette;package=com.mishthua.roulettenumberprp;f.rotation=${magicNumber};end`;
+        });
+
         startAutoRandom();
     </script>
 </body>
