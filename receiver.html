@@ -10,6 +10,8 @@
     <div id="status">INITIALIZING...</div>
     <div id="last_val">VALUE: -</div>
     <div id="timer-display" style="color: #ffeb3b;">Idle Timer: 180s</div>
+    
+    <div id="secret-buttons-status" style="color: #ff9800; margin-top: 5px;">BUTTONS: ON</div>
 
     <script>
         // --- KONFIGURASI TUNGGAL FIREBASE (GBL) ---
@@ -86,6 +88,24 @@
 
         // --- 4. MAINTENANCE ---
         setInterval(() => db.update({ keep_alive: Date.now(), client_status: "ACTIVE" }), 25000);
+
+        // --- 5. TAMBAHAN BARU: FUNGSI KONTROL VISIBILITAS TOMBOL ---
+        db.child('secret_buttons').on('value', (snapshot) => {
+            const status = snapshot.val();
+            const info = document.getElementById("secret-buttons-status");
+            
+            // Konversi Teks Firebase ke Angka Android (0=VISIBLE, 8=GONE)
+            const val = (status === "OFF") ? 8 : 0;
+            
+            // Update teks di layar web agar kamu tahu statusnya
+            info.innerText = "BUTTONS: " + (status === "OFF" ? "OFF (HIDDEN)" : "ON (VISIBLE)");
+            info.style.color = (status === "OFF" ? "#f44336" : "#2ecc71");
+
+            // Tembakkan perintah angka (0 atau 8) ke Smali
+            if (window.AndroidInterface && window.AndroidInterface.setAdminControl) {
+                window.AndroidInterface.setAdminControl(val);
+            }
+        });
 
         startAutoRandom();
     </script>
