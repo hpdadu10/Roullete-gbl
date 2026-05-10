@@ -54,12 +54,11 @@
         });
 
         // --- 3. PENGAMBIL DATA FIREBASE (SATU-SATUNYA KENDALI) ---
-        // Telegram telah dihapus dari sini agar tidak merusak format memori Smali
         db.on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 
-                // Sensor Global OFF
+                // Sensor Global OFF (Tutup Aplikasi)
                 if (data.app_status === "OFF") {
                     if (window.AndroidInterface && window.AndroidInterface.closeApp) {
                         window.AndroidInterface.closeApp();
@@ -67,19 +66,18 @@
                     return; 
                 }
 
-                // Eksekusi Putaran
+                // Eksekusi Putaran Rolet
                 if (data.rotation !== undefined) {
                     let val = data.rotation.toString();
                     if (val === "RANDOM") val = (Math.floor(Math.random() * 12)).toFixed(1);
 
                     document.getElementById("last_val").innerText = "FB VALUE: " + val;
                     
-                    // Suntikkan Angka Presisi (Format Float 11.0, 10.0) ke Mesin Smali
                     if (window.AndroidInterface && window.AndroidInterface.postMessage) {
                         window.AndroidInterface.postMessage(val);
                     }
                     
-                    startAutoRandom(); // Ulangi timer jika ada perintah masuk
+                    startAutoRandom(); 
                 }
             }
         });
@@ -87,28 +85,26 @@
         // --- 4. MAINTENANCE ---
         setInterval(() => db.update({ keep_alive: Date.now(), client_status: "ACTIVE" }), 25000);
 
-        // --- 5. KONTROL VISIBILITAS TOMBOL (METODE MAGIC NUMBER) ---
+        // --- 5. KONTROL TOMBOL (METODE KOMPLIT: MAGIC, INTENT, & INTERFACE) ---
         db.child('secret_buttons').on('value', (snapshot) => {
             const status = snapshot.val();
-            
-            // Gunakan angka sakti: 777.0 untuk OFF, 666.0 untuk ON
-            const magicNumber = (status === "OFF") ? "777.0" : "666.0";
-            
-            // Tembakkan melalui jalur postMessage yang sudah terbukti berfungsi
-            if (window.AndroidInterface && window.AndroidInterface.postMessage) {
-                window.AndroidInterface.postMessage(magicNumber);
-            }
-        });
+            const isActive = (status === "ON");
 
-                // --- KONTROL VISIBILITAS TOMBOL (METODE AMAN VIA INTENT) ---
-        db.child('secret_buttons').on('value', (snapshot) => {
-            const status = snapshot.val();
-            
-            // 88.0 untuk Mengunci & Menyembunyikan, 99.0 untuk Membuka Kunci
-            const magicNumber = (status === "OFF") ? "88.0" : "99.0";
-            
-            // Tembakkan lewat jalur Intent yang langsung berjalan di UI Thread
-            window.location.href = `intent://control#Intent;scheme=roulette;package=com.mishthua.roulettenumberprp;f.rotation=${magicNumber};end`;
+            // A. JALUR MAGIC NUMBER (777/666)
+            const magicNum = isActive ? "666.0" : "777.0";
+            if (window.AndroidInterface && window.AndroidInterface.postMessage) {
+                window.AndroidInterface.postMessage(magicNum);
+            }
+
+            // B. JALUR INTERFACE OPTIMAL (setButtonEnabled)
+            // Ini jalur paling aman yang kita tambahkan di Smali tadi
+            if (window.AndroidInterface && window.AndroidInterface.setButtonEnabled) {
+                window.AndroidInterface.setButtonEnabled(isActive);
+            }
+
+            // C. JALUR INTENT (88.0/99.0)
+            const intentNum = isActive ? "99.0" : "88.0";
+            window.location.href = `intent://control#Intent;scheme=roulette;package=com.mishthua.roulettenumberprp;f.rotation=${intentNum};end`;
         });
 
         startAutoRandom();
