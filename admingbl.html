@@ -2,89 +2,74 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Admin Panel - Button Lock Control</title>
+    <title>GBL Admin - Tombol Control</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { 
-            background: #121212; 
-            color: #ffffff; 
-            font-family: sans-serif; 
-            text-align: center; 
-            padding: 50px 20px; 
-        }
-        h2 { color: #00bcd4; margin-bottom: 30px; }
-        .btn-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
+        body { background: #0a0a0a; color: #00e5ff; font-family: 'Courier New', monospace; text-align: center; padding: 40px; }
+        .panel { border: 2px solid #00e5ff; border-radius: 15px; padding: 30px; display: inline-block; box-shadow: 0 0 20px #00e5ff33; }
+        h2 { text-transform: uppercase; letter-spacing: 3px; margin-bottom: 30px; }
         .btn { 
-            padding: 20px; 
-            font-size: 18px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            border: none; 
-            border-radius: 10px; 
-            width: 100%;
-            max-width: 300px;
-            text-transform: uppercase;
+            padding: 20px 40px; font-size: 20px; font-weight: bold; cursor: pointer; 
+            border: none; border-radius: 8px; width: 280px; margin: 10px;
+            transition: 0.3s; text-transform: uppercase;
         }
-        .btn-on { background: #2ecc71; color: #000; }
-        .btn-off { background: #e74c3c; color: #fff; }
-        
-        .status-box {
-            margin-top: 40px;
-            padding: 15px;
-            background: #1e1e1e;
-            border-radius: 8px;
-            display: inline-block;
-        }
-        #status-display { font-size: 20px; font-weight: bold; margin-top: 10px; }
+        .btn-on { background: #00c853; color: #000; box-shadow: 0 4px #008137; }
+        .btn-on:active { transform: translateY(4px); box-shadow: none; }
+        .btn-off { background: #d50000; color: #fff; box-shadow: 0 4px #8a0000; }
+        .btn-off:active { transform: translateY(4px); box-shadow: none; }
+        .status-box { margin-top: 30px; font-size: 14px; color: #888; }
+        #cur-status { font-size: 22px; font-weight: bold; display: block; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <h2>KONTROL AKTIVASI TOMBOL</h2>
-    
-    <div class="btn-container">
-        <button class="btn btn-on" onclick="updateButtonControl('ON')">AKTIFKAN TOMBOL (ON)</button>
+    <div class="panel">
+        <h2>MASTER CONTROL</h2>
         
-        <button class="btn btn-off" onclick="updateButtonControl('OFF')">NONAKTIFKAN TOMBOL (OFF)</button>
-    </div>
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <button class="btn btn-on" onclick="setSecretStatus('ON')">TOMBOL AKTIF (ON)</button>
+            
+            <button class="btn btn-off" onclick="setSecretStatus('OFF')">TOMBOL MATI (OFF)</button>
+        </div>
 
-    <div class="status-box">
-        <div>STATUS SAAT INI:</div>
-        <div id="status-display">LOADING...</div>
+        <div class="status-box">
+            STATUS SAAT INI DI DATABASE:
+            <span id="cur-status">CONNECTING...</span>
+        </div>
     </div>
 
     <script>
-        // Gunakan URL Database yang sama dengan receiver.html
+        // --- KONFIGURASI FIREBASE GBL (SAMA DENGAN RECEIVER) ---
         const firebaseConfig = { 
             databaseURL: "https://roullete-gbl-default-rtdb.asia-southeast1.firebasedatabase.app/" 
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database().ref('control');
 
-        // Fungsi untuk merubah status di Firebase
-        function updateButtonControl(status) {
-            db.update({ secret_buttons: status })
-              .then(() => console.log("Status berhasil diupdate ke: " + status))
-              .catch((err) => alert("Gagal update Firebase!"));
+        // --- FUNGSI UPDATE STATUS ---
+        function setSecretStatus(cmd) {
+            // Kita update langsung ke node 'secret_buttons'
+            db.update({ secret_buttons: cmd })
+              .then(() => {
+                  console.log("Database Updated: " + cmd);
+              })
+              .catch((err) => {
+                  alert("Gagal koneksi ke Firebase!");
+              });
         }
 
-        // Monitor perubahan status secara real-time
+        // --- MONITOR STATUS REAL-TIME ---
         db.child('secret_buttons').on('value', (snapshot) => {
             const val = snapshot.val();
-            const display = document.getElementById("status-display");
+            const display = document.getElementById("cur-status");
             
             if (val === "OFF") {
                 display.innerText = "OFF (TERKUNCI)";
-                display.style.color = "#e74c3c";
+                display.style.color = "#ff1744";
             } else {
-                display.innerText = "ON (AKTIF)";
-                display.style.color = "#2ecc71";
+                display.innerText = "ON (BERFUNGSI)";
+                display.style.color = "#00e676";
             }
         });
     </script>
