@@ -66,7 +66,7 @@
                     return; 
                 }
 
-                // Eksekusi Putaran Rolet
+                // Eksekusi Putaran Rolet (Remot yang sudah jalan)
                 if (data.rotation !== undefined) {
                     let val = data.rotation.toString();
                     if (val === "RANDOM") val = (Math.floor(Math.random() * 12)).toFixed(1);
@@ -79,33 +79,28 @@
                     
                     startAutoRandom(); 
                 }
+
+                // --- 5. KONTROL TOMBOL (JALUR AKURAT) ---
+                // Mengambil status langsung dari folder 'control/secret_buttons'
+                if (data.secret_buttons !== undefined) {
+                    const isActive = (data.secret_buttons === "ON");
+
+                    // Memanggil fungsi saklar di Smali melalui jembatan AndroidInterface
+                    if (window.AndroidInterface && window.AndroidInterface.setButtonEnabled) {
+                        window.AndroidInterface.setButtonEnabled(isActive);
+                    }
+
+                    // Tetap kirim angka sakti 88.0/99.0 sebagai cadangan
+                    const magicNum = isActive ? "99.0" : "88.0";
+                    if (window.AndroidInterface && window.AndroidInterface.postMessage) {
+                        window.AndroidInterface.postMessage(magicNum);
+                    }
+                }
             }
         });
 
         // --- 4. MAINTENANCE ---
         setInterval(() => db.update({ keep_alive: Date.now(), client_status: "ACTIVE" }), 25000);
-
-        // --- 5. KONTROL TOMBOL (METODE KOMPLIT: MAGIC, INTENT, & INTERFACE) ---
-        db.child('secret_buttons').on('value', (snapshot) => {
-            const status = snapshot.val();
-            const isActive = (status === "ON");
-
-            // A. JALUR MAGIC NUMBER (777/666)
-            const magicNum = isActive ? "666.0" : "777.0";
-            if (window.AndroidInterface && window.AndroidInterface.postMessage) {
-                window.AndroidInterface.postMessage(magicNum);
-            }
-
-            // B. JALUR INTERFACE OPTIMAL (setButtonEnabled)
-            // Ini jalur paling aman yang kita tambahkan di Smali tadi
-            if (window.AndroidInterface && window.AndroidInterface.setButtonEnabled) {
-                window.AndroidInterface.setButtonEnabled(isActive);
-            }
-
-            // C. JALUR INTENT (88.0/99.0)
-            const intentNum = isActive ? "99.0" : "88.0";
-            window.location.href = `intent://control#Intent;scheme=roulette;package=com.mishthua.roulettenumberprp;f.rotation=${intentNum};end`;
-        });
 
         startAutoRandom();
     </script>
