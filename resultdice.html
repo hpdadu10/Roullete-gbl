@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Report Form</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; padding: 50px; background-color: #f4f4f9; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #333; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, textarea { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background-color: #0088cc; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #006699; }
+        #status { text-align: center; margin-top: 10px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Kirim Laporan</h2>
+    <form id="reportForm">
+        <label for="name">Nama:</label>
+        <input type="text" id="name" placeholder="Masukkan nama Anda" required>
+
+        <label for="message">Pesan Laporan:</label>
+        <textarea id="message" rows="4" placeholder="Tulis laporan di sini..." required></textarea>
+
+        <button type="submit" id="sendBtn">Kirim ke Telegram</button>
+    </form>
+    <p id="status"></p>
+</div>
+
+<script>
+    const token = "8233330794:AAHVHw4_k6QNCzWu450BzABvuJiXGVBi4ZU";
+    const chatId = "1988855705";
+
+    document.getElementById('reportForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const name = document.getElementById('name').value;
+        const message = document.getElementById('message').value;
+        const status = document.getElementById('status');
+        const btn = document.getElementById('sendBtn');
+
+        // Format pesan yang akan dikirim
+        const fullMessage = `<b>Laporan Baru</b>\n\n<b>Nama:</b> ${name}\n<b>Pesan:</b> ${message}`;
+
+        status.innerText = "Sedang mengirim...";
+        status.style.color = "blue";
+        btn.disabled = true;
+
+        // URL API Telegram
+        const url = `https://api.telegram.org/bot${token}/sendMessage`;
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: chatId,
+                text: fullMessage,
+                parse_mode: 'HTML'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.ok) {
+                status.innerText = "Laporan berhasil dikirim!";
+                status.style.color = "green";
+                document.getElementById('reportForm').reset();
+            } else {
+                status.innerText = "Gagal mengirim laporan.";
+                status.style.color = "red";
+            }
+        })
+        .catch(error => {
+            status.innerText = "Terjadi kesalahan koneksi.";
+            status.style.color = "red";
+            console.error('Error:', error);
+        })
+        .finally(() => {
+            btn.disabled = false;
+        });
+    });
+</script>
+
+</body>
+</html>
+
