@@ -3,86 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dadu BK - Final Monitor</title>
+    <title>FINAL MONITOR DADU</title>
     <style>
-        body { font-family: sans-serif; background: #0a0a0a; color: #fff; padding: 20px; text-align: center; }
-        .monitor-box { max-width: 400px; margin: auto; background: #151515; padding: 20px; border-radius: 12px; border: 1px solid #333; }
-        #main-btn { width: 100%; padding: 18px; background: #cc0000; color: #fff; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 16px; margin-bottom: 15px; }
-        #main-btn.active { background: #008800; }
-        #display { height: 350px; overflow-y: auto; background: #000; padding: 12px; text-align: left; font-family: 'Courier New', monospace; font-size: 12px; border: 1px solid #222; border-radius: 5px; }
-        .log-item { padding: 8px; border-bottom: 1px solid #111; color: #00ff00; line-height: 1.5; }
-        .time { color: #888; font-size: 10px; margin-right: 5px; }
+        body { font-family: monospace; background: #000; color: #0f0; padding: 20px; margin: 0; }
+        .box { border: 1px solid #0f0; padding: 15px; border-radius: 5px; max-width: 400px; margin: auto; }
+        #btn { width: 100%; padding: 20px; background: #0f0; color: #000; border: none; font-weight: bold; cursor: pointer; font-size: 16px; margin-bottom: 10px; }
+        #btn:active { background: #008800; }
+        #log { height: 300px; overflow-y: auto; background: #050505; padding: 10px; border: 1px solid #222; margin-top: 10px; font-size: 12px; }
+        .entry { margin-bottom: 8px; border-bottom: 1px solid #111; padding-bottom: 5px; }
+        .BESAR { color: #ff0000; font-weight: bold; }
+        .KECIL { color: #00ff00; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="monitor-box">
-    <h3>DADU BK REALTIME</h3>
-    <button id="main-btn">AKTIFKAN MONITORING SEKARANG</button>
-    <div id="display">Klik tombol di atas untuk sinkronisasi...</div>
+<div class="box">
+    <button id="btn">TAP UNTUK CONNECT (FORCE)</button>
+    <div id="status">Status: Disconnected</div>
+    <div id="log">Klik tombol di atas...</div>
 </div>
 
 <script>
-    const BOT_TOKEN = "8233330794:AAHVHw4_k6QNCzWu450BzABvuJiXGVBi4ZU";
+    const TOKEN = "8233330794:AAHVHw4_k6QNCzWu450BzABvuJiXGVBi4ZU";
     let lastId = 0;
-    let monitoring = false;
 
-    [span_4](start_span)// Fungsi getar berdasarkan teks laporan[span_4](end_span)
-    function triggerVibration(msg) {
+    [span_2](start_span)// Fungsi getar[span_2](end_span)
+    function vibrator(msg) {
         if (!navigator.vibrate) return;
-        if (msg.includes("DADU_BESAR")) {
-            navigator.vibrate([300, 100, 300]); // Getar 2x
-        } else if (msg.includes("DADU_KECIL")) {
-            navigator.vibrate(600); // Getar 1x panjang
-        }
+        if (msg.includes("DADU_BESAR")) navigator.vibrate([200, 100, 200]);
+        else if (msg.includes("DADU_KECIL")) navigator.vibrate(500);
     }
 
-    document.getElementById('main-btn').onclick = function() {
-        monitoring = true;
-        this.className = "active";
-        this.innerText = "MONITORING SEDANG JALAN...";
-        document.getElementById('display').innerHTML = "Menghubungkan ke Bot...";
-        navigator.vibrate(100); // Tes getar saat aktivasi
-        sync();
+    document.getElementById('btn').onclick = async function() {
+        this.innerText = "SEDANG SINKRONISASI...";
+        document.getElementById('status').innerText = "Status: Cleaning Webhook...";
+        
+        // LANGKAH 1: Paksa hapus webhook agar bot bisa pakai getUpdates
+        try {
+            await fetch(`https://api.telegram.org/bot${TOKEN}/deleteWebhook`);
+            document.getElementById('status').innerText = "Status: Online (Monitoring)";
+            this.style.background = "#555";
+            this.disabled = true;
+            loop();
+        } catch (e) {
+            alert("Gagal koneksi ke API Telegram");
+        }
     };
 
-    async function sync() {
-        if (!monitoring) return;
-
-        // Gunakan offset -1 untuk mengambil pesan paling terakhir saat pertama kali koneksi
+    async function loop() {
+        // Gunakan offset -1 untuk mengambil 1 pesan terbaru yang masuk saja
         const offset = lastId === 0 ? -1 : lastId + 1;
         
         try {
-            // Tambahkan timestamp (&t=...) agar browser tidak mengambil data lama dari cache
-            const url = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${offset}&timeout=20&t=${Date.now()}`;
-            const response = await fetch(url);
-            const data = await response.json();
+            const resp = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?offset=${offset}&timeout=10`);
+            const data = await resp.json();
 
             if (data.ok && data.result.length > 0) {
-                data.result.forEach(update => {
-                    lastId = update.update_id;
-                    if (update.message && update.message.text) {
-                        const messageText = update.message.text;
+                data.result.forEach(u => {
+                    lastId = u.update_id;
+                    if (u.message && u.message.text) {
+                        const txt = u.message.text;
+                        const log = document.getElementById('log');
+                        const time = new Date().toLocaleTimeString();
                         
-                        // Buat elemen log baru
-                        const logEntry = document.createElement('div');
-                        logEntry.className = "log-item";
-                        logEntry.innerHTML = `<span class="time">${new Date().toLocaleTimeString()}</span> ${messageText.replace(/\n/g, '<br>')}`;
-                        
-                        const display = document.getElementById('display');
-                        display.prepend(logEntry);
+                        let type = "";
+                        if (txt.includes("BESAR")) type = "BESAR";
+                        if (txt.includes("KECIL")) type = "KECIL";
 
-                        // Jalankan getaran
-                        triggerVibration(messageText.toUpperCase());
+                        const div = document.createElement('div');
+                        div.className = `entry ${type}`;
+                        div.innerHTML = `[${time}] ${txt.replace(/\n/g, '<br>')}`;
+                        log.prepend(div);
+
+                        vibrator(txt.toUpperCase());
                     }
                 });
             }
-        } catch (err) {
-            console.log("Koneksi terputus, mencoba lagi...");
-        }
-        
-        setTimeout(sync, 1000); // Cek ulang setiap 1 detik
+        } catch (e) {}
+        setTimeout(loop, 1000);
     }
 </script>
+
 </body>
 </html>
