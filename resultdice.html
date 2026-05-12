@@ -3,115 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoring Dadu BK Pro</title>
+    <title>Force Monitoring Dadu</title>
     <style>
-        body { font-family: sans-serif; background-color: #121212; color: #ffffff; padding: 20px; text-align: center; }
-        .card { max-width: 450px; margin: auto; background: #1e1e1e; padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.8); }
-        #status-btn { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; margin-bottom: 15px; transition: 0.3s; }
-        .btn-off { background: #ff4444; color: white; }
-        .btn-on { background: #00c851; color: white; }
-        #log { height: 400px; overflow-y: auto; background: #000; border-radius: 10px; padding: 10px; text-align: left; border: 1px solid #333; }
-        .entry { padding: 8px; border-bottom: 1px solid #222; font-family: monospace; font-size: 12px; animation: fadeIn 0.5s; }
-        .besar { color: #ff4444; border-left: 4px solid #ff4444; padding-left: 10px; }
-        .kecil { color: #00c851; border-left: 4px solid #00c851; padding-left: 10px; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        body { font-family: sans-serif; background: #000; color: #fff; padding: 20px; text-align: center; }
+        .box { max-width: 400px; margin: auto; background: #111; padding: 20px; border-radius: 10px; border: 1px solid #333; }
+        #btn { width: 100%; padding: 15px; background: #ff0000; color: #fff; border: none; font-weight: bold; border-radius: 5px; cursor: pointer; }
+        #btn.on { background: #00ff00; color: #000; }
+        #log { height: 350px; overflow-y: auto; margin-top: 15px; background: #050505; padding: 10px; text-align: left; font-family: monospace; font-size: 11px; border: 1px inset #222; }
+        .msg { border-bottom: 1px solid #222; padding: 5px 0; color: #0f0; }
+        .err { color: #f00; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>Monitoring Dadu BK</h2>
-    <button id="status-btn" class="btn-off">KLIK UNTUK AKTIFKAN MONITORING</button>
-    
-    <div id="log">
-        <div class="entry" style="color: #888;">Sistem menunggu aktivasi...</div>
-    </div>
+<div class="box">
+    <h3>Dadu BK Force Monitor</h3>
+    <button id="btn">TAP UNTUK PAKSA CONNECT</button>
+    <div id="log">Menunggu aktivasi...</div>
 </div>
 
 <script>
-    const token = "8233330794:AAHVHw4_k6QNCzWu450BzABvuJiXGVBi4ZU";
-    const chatId = "1988855705";
-    let lastUpdateId = 0;
-    let isActive = false;
+    const TOKEN = "8233330794:AAHVHw4_k6QNCzWu450BzABvuJiXGVBi4ZU";
+    let lastId = 0;
+    let run = false;
 
-    const btn = document.getElementById('status-btn');
-    const log = document.getElementById('log');
-
-    // Fungsi Getar (Sesuai Permintaan)
-    function handleVibration(text) {
-        if (!("vibrate" in navigator)) return;
-        
-        if (text.includes("DADU_BESAR")) {
-            navigator.vibrate([200, 100, 200]); // Getar 2 kali
-        } else if (text.includes("DADU_KECIL")) {
-            navigator.vibrate(500); // Getar 1 kali
-        }
+    // Fungsi Getar Paksa
+    function vibrate(type) {
+        if (!navigator.vibrate) return;
+        if (type.includes("BESAR")) navigator.vibrate([300, 100, 300]);
+        else if (type.includes("KECIL")) navigator.vibrate(600);
     }
 
-    btn.addEventListener('click', () => {
-        if (!isActive) {
-            isActive = true;
-            btn.innerText = "MONITORING AKTIF (ONLINE)";
-            btn.className = "btn-on";
-            addLog("Mencari laporan terbaru...", "#888");
-            navigator.vibrate(100); // Feedback getar saat tombol ditekan
-            startMonitoring();
-        }
-    });
+    document.getElementById('btn').onclick = function() {
+        run = true;
+        this.className = "on";
+        this.innerText = "MONITORING BERJALAN...";
+        document.getElementById('log').innerHTML = "Memulai koneksi paksa...";
+        poll();
+    };
 
-    async function startMonitoring() {
-        if (!isActive) return;
+    async function poll() {
+        if (!run) return;
 
-        // Logika "Pasti Membaca": Jika baru mulai (lastUpdateId=0), gunakan offset negatif
-        // -10 artinya mengambil 10 pesan terakhir yang ada di server Telegram
-        const offset = lastUpdateId === 0 ? -10 : lastUpdateId + 1;
-        const url = `https://api.telegram.org/bot${token}/getUpdates?offset=${offset}&timeout=30`;
-
+        // Force Offset: Mengambil 5 pesan terakhir tanpa peduli status 'read'
+        const offset = lastId === 0 ? -5 : lastId + 1;
+        
         try {
-            const response = await fetch(url);
-            const data = await response.json();
+            const r = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?offset=${offset}&timeout=15&limit=10`);
+            const d = await r.json();
 
-            if (data.ok && data.result.length > 0) {
-                data.result.forEach(update => {
-                    lastUpdateId = update.update_id;
-                    if (update.message && update.message.text) {
-                        const msgText = update.message.text;
+            if (d.ok && d.result.length > 0) {
+                d.result.forEach(u => {
+                    lastId = u.update_id;
+                    if (u.message && u.message.text) {
+                        const t = u.message.text.toUpperCase();
+                        const time = new Date().toLocaleTimeString();
                         
-                        // Filter pesan berdasarkan ID Anda agar tidak tercampur pesan orang lain
-                        if (String(update.message.chat.id) === chatId) {
-                            displayMessage(msgText);
-                            handleVibration(msgText);
-                        }
+                        // Cetak ke Log
+                        const item = document.createElement('div');
+                        item.className = "msg";
+                        item.innerHTML = `[${time}] ${u.message.text.replace(/\n/g, '<br>')}`;
+                        document.getElementById('log').prepend(item);
+
+                        // Eksekusi Getar
+                        vibrate(t);
                     }
                 });
             }
-        } catch (err) {
-            console.log("Reconnecting...");
+        } catch (e) {
+            console.log("Retry...");
         }
-
-        // Loop monitoring
-        setTimeout(startMonitoring, 1500);
-    }
-
-    function displayMessage(text) {
-        let type = "";
-        if (text.includes("DADU_BESAR")) type = "besar";
-        if (text.includes("DADU_KECIL")) type = "kecil";
-
-        const div = document.createElement('div');
-        div.className = `entry ${type}`;
-        div.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong><br>${text.replace(/\n/g, '<br>')}`;
-        log.prepend(div);
-    }
-
-    function addLog(text, color) {
-        const div = document.createElement('div');
-        div.className = 'entry';
-        div.style.color = color;
-        div.innerText = text;
-        log.prepend(div);
+        setTimeout(poll, 1000); // Cek setiap 1 detik
     }
 </script>
-
 </body>
 </html>
