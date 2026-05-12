@@ -3,132 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Monitoring Dadu BK</title>
+    <title>Monitoring Dadu BK Pro</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #e0e0e0; padding: 20px; text-align: center; margin: 0; }
-        .container { max-width: 500px; margin: 20px auto; background: #1e1e1e; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); border: 1px solid #333; }
-        h2 { color: #0088cc; margin-top: 0; }
-        #startBtn { padding: 15px; width: 100%; background: #0088cc; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 20px; font-size: 16px; transition: 0.3s; box-shadow: 0 4px 15px rgba(0, 136, 204, 0.4); }
-        #startBtn.active { background: #00c851; box-shadow: 0 4px 15px rgba(0, 200, 81, 0.4); }
-        #log-container { height: 350px; overflow-y: auto; background: #000; border-radius: 10px; padding: 15px; text-align: left; border: 1px solid #444; display: flex; flex-direction: column; }
-        .log-entry { padding: 10px; border-bottom: 1px solid #222; font-family: 'Courier New', Courier, monospace; font-size: 13px; line-height: 1.4; }
-        .besar { color: #ff4444; font-weight: bold; background: rgba(255, 68, 68, 0.1); border-radius: 4px; padding: 2px 5px; }
-        .kecil { color: #00c851; font-weight: bold; background: rgba(0, 200, 81, 0.1); border-radius: 4px; padding: 2px 5px; }
-        .status-info { font-size: 12px; color: #888; margin-top: 15px; }
+        body { font-family: sans-serif; background-color: #121212; color: #ffffff; padding: 20px; text-align: center; }
+        .card { max-width: 450px; margin: auto; background: #1e1e1e; padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.8); }
+        #status-btn { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; margin-bottom: 15px; transition: 0.3s; }
+        .btn-off { background: #ff4444; color: white; }
+        .btn-on { background: #00c851; color: white; }
+        #log { height: 400px; overflow-y: auto; background: #000; border-radius: 10px; padding: 10px; text-align: left; border: 1px solid #333; }
+        .entry { padding: 8px; border-bottom: 1px solid #222; font-family: monospace; font-size: 12px; animation: fadeIn 0.5s; }
+        .besar { color: #ff4444; border-left: 4px solid #ff4444; padding-left: 10px; }
+        .kecil { color: #00c851; border-left: 4px solid #00c851; padding-left: 10px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="card">
     <h2>Monitoring Dadu BK</h2>
+    <button id="status-btn" class="btn-off">KLIK UNTUK AKTIFKAN MONITORING</button>
     
-    <button id="startBtn">AKTIFKAN MONITORING & GETAR</button>
-    
-    <div style="margin-bottom: 15px; font-size: 14px;">
-        Status: <span id="connStatus" style="color: #ff4444;">Offline</span>
-    </div>
-
-    <div id="log-container">
-        <div class="log-entry" style="color: #ffbb33;">Silakan klik tombol di atas untuk memulai...</div>
-    </div>
-    
-    <div class="status-info">
-        * Getar 2x untuk <b>DADU_BESAR</b><br>
-        * Getar 1x untuk <b>DADU_KECIL</b>
+    <div id="log">
+        <div class="entry" style="color: #888;">Sistem menunggu aktivasi...</div>
     </div>
 </div>
 
 <script>
     const token = "8233330794:AAHVHw4_k6QNCzWu450BzABvuJiXGVBi4ZU";
+    const chatId = "1988855705";
     let lastUpdateId = 0;
-    let isRunning = false;
+    let isActive = false;
 
-    const startBtn = document.getElementById('startBtn');
-    const connStatus = document.getElementById('connStatus');
-    const logContainer = document.getElementById('log-container');
+    const btn = document.getElementById('status-btn');
+    const log = document.getElementById('log');
 
-    // Fungsi getar perangkat
-    function vibrateDevice(mode) {
-        if ("vibrate" in navigator) {
-            if (mode === "BESAR") {
-                // Getar 2 kali: Getar 200ms, Jeda 100ms, Getar 200ms
-                navigator.vibrate([200, 100, 200]);
-            } else if (mode === "KECIL") {
-                // Getar 1 kali panjang: 500ms
-                navigator.vibrate(500);
-            }
+    // Fungsi Getar (Sesuai Permintaan)
+    function handleVibration(text) {
+        if (!("vibrate" in navigator)) return;
+        
+        if (text.includes("DADU_BESAR")) {
+            navigator.vibrate([200, 100, 200]); // Getar 2 kali
+        } else if (text.includes("DADU_KECIL")) {
+            navigator.vibrate(500); // Getar 1 kali
         }
     }
 
-    // Tombol Aktivasi (Wajib diklik agar browser mengizinkan getar)
-    startBtn.addEventListener('click', function() {
-        if (!isRunning) {
-            isRunning = true;
-            this.innerHTML = "MONITORING AKTIF";
-            this.classList.add('active');
-            connStatus.innerHTML = "Online (Mencari Data...)";
-            connStatus.style.color = "#00c851";
-            
-            // Test getar awal
-            navigator.vibrate(100); 
-            
-            // Mulai ambil data
-            addLog("Sistem diaktifkan. Menunggu laporan game...");
-            fetchUpdates();
+    btn.addEventListener('click', () => {
+        if (!isActive) {
+            isActive = true;
+            btn.innerText = "MONITORING AKTIF (ONLINE)";
+            btn.className = "btn-on";
+            addLog("Mencari laporan terbaru...", "#888");
+            navigator.vibrate(100); // Feedback getar saat tombol ditekan
+            startMonitoring();
         }
     });
 
-    async function fetchUpdates() {
-        if (!isRunning) return;
+    async function startMonitoring() {
+        if (!isActive) return;
+
+        // Logika "Pasti Membaca": Jika baru mulai (lastUpdateId=0), gunakan offset negatif
+        // -10 artinya mengambil 10 pesan terakhir yang ada di server Telegram
+        const offset = lastUpdateId === 0 ? -10 : lastUpdateId + 1;
+        const url = `https://api.telegram.org/bot${token}/getUpdates?offset=${offset}&timeout=30`;
 
         try {
-            // Mengambil update dari Telegram API
-            const response = await fetch(`https://api.telegram.org/bot${token}/getUpdates?offset=${lastUpdateId + 1}&timeout=20`);
+            const response = await fetch(url);
             const data = await response.json();
 
             if (data.ok && data.result.length > 0) {
                 data.result.forEach(update => {
                     lastUpdateId = update.update_id;
                     if (update.message && update.message.text) {
-                        processMessage(update.message.text);
+                        const msgText = update.message.text;
+                        
+                        // Filter pesan berdasarkan ID Anda agar tidak tercampur pesan orang lain
+                        if (String(update.message.chat.id) === chatId) {
+                            displayMessage(msgText);
+                            handleVibration(msgText);
+                        }
                     }
                 });
             }
-        } catch (error) {
-            console.error("Connection error:", error);
+        } catch (err) {
+            console.log("Reconnecting...");
         }
 
-        // Loop terus menerus setiap 2 detik
-        setTimeout(fetchUpdates, 2000);
+        // Loop monitoring
+        setTimeout(startMonitoring, 1500);
     }
 
-    function processMessage(msg) {
-        const time = new Date().toLocaleTimeString();
-        let htmlContent = `[${time}] ${msg}`;
+    function displayMessage(text) {
         let type = "";
+        if (text.includes("DADU_BESAR")) type = "besar";
+        if (text.includes("DADU_KECIL")) type = "kecil";
 
-        if (msg.includes("HASIL: DADU_BESAR")) {
-            type = "besar";
-            vibrateDevice("BESAR");
-        } else if (msg.includes("HASIL: DADU_KECIL")) {
-            type = "kecil";
-            vibrateDevice("KECIL");
-        }
-
-        addLog(htmlContent, type);
+        const div = document.createElement('div');
+        div.className = `entry ${type}`;
+        div.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong><br>${text.replace(/\n/g, '<br>')}`;
+        log.prepend(div);
     }
 
-    function addLog(content, typeClass = "") {
-        const entry = document.createElement('div');
-        entry.className = 'log-entry';
-        if (typeClass) {
-            entry.innerHTML = `<span class="${typeClass}">${content}</span>`;
-        } else {
-            entry.innerHTML = content;
-        }
-        
-        // Tambahkan ke paling atas
-        logContainer.prepend(entry);
+    function addLog(text, color) {
+        const div = document.createElement('div');
+        div.className = 'entry';
+        div.style.color = color;
+        div.innerText = text;
+        log.prepend(div);
     }
 </script>
 
