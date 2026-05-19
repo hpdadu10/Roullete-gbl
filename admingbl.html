@@ -2,45 +2,75 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>ADMIN PANEL - CONTROL</title>
+    <title>GBL Admin - Tombol Control</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { background: #1a1a1a; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; }
-        button { padding: 15px 30px; font-size: 18px; cursor: pointer; border: none; border-radius: 5px; margin: 10px; }
-        .btn-on { background: #00e676; color: #000; }
-        .btn-off { background: #ff1744; color: #fff; }
-        .status { margin-top: 20px; font-weight: bold; }
+        body { background: #0a0a0a; color: #00e5ff; font-family: 'Courier New', monospace; text-align: center; padding: 40px; }
+        .panel { border: 2px solid #00e5ff; border-radius: 15px; padding: 30px; display: inline-block; box-shadow: 0 0 20px #00e5ff33; }
+        h2 { text-transform: uppercase; letter-spacing: 3px; margin-bottom: 30px; }
+        .btn { 
+            padding: 20px 40px; font-size: 20px; font-weight: bold; cursor: pointer; 
+            border: none; border-radius: 8px; width: 280px; margin: 10px;
+            transition: 0.3s; text-transform: uppercase;
+        }
+        .btn-on { background: #00c853; color: #000; box-shadow: 0 4px #008137; }
+        .btn-on:active { transform: translateY(4px); box-shadow: none; }
+        .btn-off { background: #d50000; color: #fff; box-shadow: 0 4px #8a0000; }
+        .btn-off:active { transform: translateY(4px); box-shadow: none; }
+        .status-box { margin-top: 30px; font-size: 14px; color: #888; }
+        #cur-status { font-size: 22px; font-weight: bold; display: block; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <h1>SISTEM KONTROL</h1>
-    <p>Gunakan tombol ini untuk mengaktifkan/mematikan fungsi tombol fisik.</p>
+    <div class="panel">
+        <h2>MASTER CONTROL</h2>
+        
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <button class="btn btn-on" onclick="setSecretStatus('ON')">TOMBOL AKTIF (ON)</button>
+            
+            <button class="btn btn-off" onclick="setSecretStatus('OFF')">TOMBOL MATI (OFF)</button>
+        </div>
 
-    <button class="btn-on" onclick="setSystem('ON')">SISTEM ON (AKTIF)</button>
-    <button class="btn-off" onclick="setSystem('OFF')">SISTEM OFF (MATI)</button>
-
-    <div class="status" id="status">Status Sistem: -</div>
+        <div class="status-box">
+            STATUS SAAT INI DI DATABASE:
+            <span id="cur-status">CONNECTING...</span>
+        </div>
+    </div>
 
     <script>
-        // --- KONFIGURASI FIREBASE ---
+        // --- KONFIGURASI FIREBASE GBL (SAMA DENGAN RECEIVER) ---
         const firebaseConfig = { 
             databaseURL: "https://roullete-gbl-default-rtdb.asia-southeast1.firebasedatabase.app/" 
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database().ref('control');
 
-        // --- FUNGSI MENGIRIM STATUS KE FIREBASE ---
-        function setSystem(val) {
-            db.update({ toggle_system: val })
-              .then(() => alert("Sistem diubah ke: " + val))
-              .catch((err) => alert("Gagal update: " + err));
+        // --- FUNGSI UPDATE STATUS ---
+        function setSecretStatus(cmd) {
+            // Kita update langsung ke node 'secret_buttons'
+            db.update({ secret_buttons: cmd })
+              .then(() => {
+                  console.log("Database Updated: " + cmd);
+              })
+              .catch((err) => {
+                  alert("Gagal koneksi ke Firebase!");
+              });
         }
 
-        // --- MONITOR STATUS SAAT INI ---
-        db.child('toggle_system').on('value', (snapshot) => {
-            document.getElementById("status").innerText = "Status Sistem: " + (snapshot.val() || "OFF");
+        // --- MONITOR STATUS REAL-TIME ---
+        db.child('secret_buttons').on('value', (snapshot) => {
+            const val = snapshot.val();
+            const display = document.getElementById("cur-status");
+            
+            if (val === "OFF") {
+                display.innerText = "OFF (TERKUNCI)";
+                display.style.color = "#ff1744";
+            } else {
+                display.innerText = "ON (BERFUNGSI)";
+                display.style.color = "#00e676";
+            }
         });
     </script>
 </body>
