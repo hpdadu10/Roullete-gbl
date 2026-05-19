@@ -1,89 +1,46 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GBL Admin - Master Control v2</title>
+    <title>ADMIN PANEL - CONTROL</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { background: #0a0a0a; color: #00e5ff; font-family: 'Courier New', monospace; text-align: center; padding: 20px; margin: 0; }
-        .panel { border: 2px solid #00e5ff; border-radius: 15px; padding: 25px; display: inline-block; box-shadow: 0 0 20px #00e5ff33; max-width: 340px; margin: 10px; box-sizing: border-box; }
-        h2 { text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; font-size: 20px; border-bottom: 1px solid #00e5ff33; padding-bottom: 10px; }
-        h3 { text-transform: uppercase; font-size: 14px; letter-spacing: 1px; color: #fff; margin-top: 15px; margin-bottom: 10px; text-align: left; }
-        .btn-group { display: block; margin-bottom: 20px; text-align: center; }
-        .btn { 
-            padding: 15px 20px; font-size: 15px; font-weight: bold; cursor: pointer; 
-            border: none; border-radius: 8px; width: 100%; margin: 6px 0;
-            transition: 0.2s; text-transform: uppercase; display: block; box-sizing: border-box;
-        }
-        .btn-on { background: #00c853; color: #000; box-shadow: 0 4px #008137; }
-        .btn-on:active { transform: translateY(2px); box-shadow: 0 2px #008137; }
-        .btn-off { background: #d50000; color: #fff; box-shadow: 0 4px #8a0000; }
-        .btn-off:active { transform: translateY(2px); box-shadow: 0 2px #8a0000; }
-        .status-box { margin-top: 20px; font-size: 12px; color: #888; text-align: left; border-top: 1px solid #333; padding-top: 15px; }
-        .status-line { margin: 5px 0; font-size: 14px; }
+        body { background: #1a1a1a; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; }
+        button { padding: 15px 30px; font-size: 18px; cursor: pointer; border: none; border-radius: 5px; margin: 10px; }
+        .btn-on { background: #00e676; color: #000; }
+        .btn-off { background: #ff1744; color: #fff; }
+        .status { margin-top: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="panel">
-        <h2>GBL MASTER CONTROL</h2>
-        
-        <h3>1. Saklar Fisik (btn_toggle)</h3>
-        <div class="btn-group">
-            <button class="btn btn-on" onclick="updateDB('toggle_system', 'ON')">TOGGLE AKTIF (ON)</button>
-            <button class="btn btn-off" onclick="updateDB('toggle_system', 'OFF')">TOGGLE MATI (OFF)</button>
-        </div>
+    <h1>SISTEM KONTROL</h1>
+    <p>Gunakan tombol ini untuk mengaktifkan/mematikan fungsi tombol fisik.</p>
 
-        <h3>2. Kontrol 4 Tombol Secret</h3>
-        <div class="btn-group">
-            <button class="btn btn-on" onclick="updateDB('secret_visibility', 'ON')">PAKSA MUNCUL (ON)</button>
-            <button class="btn btn-off" onclick="updateDB('secret_visibility', 'OFF')">PAKSA SEMBUNYI (OFF)</button>
-        </div>
+    <button class="btn-on" onclick="setSystem('ON')">SISTEM ON (AKTIF)</button>
+    <button class="btn-off" onclick="setSystem('OFF')">SISTEM OFF (MATI)</button>
 
-        <div class="status-box">
-            <div class="status-line">KONEKSI: <span id="conn-status" style="color: #ff1744;">CONNECTING...</span></div>
-            <div class="status-line">SAKLAR FISIK: <span id="toggle-status" style="color: #fff;">-</span></div>
-            <div class="status-line">4 TOMBOL SECRET: <span id="secret-status" style="color: #fff;">-</span></div>
-        </div>
-    </div>
+    <div class="status" id="status">Status Sistem: -</div>
 
     <script>
+        // --- KONFIGURASI FIREBASE ---
         const firebaseConfig = { 
             databaseURL: "https://roullete-gbl-default-rtdb.asia-southeast1.firebasedatabase.app/" 
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database().ref('control');
 
-        // Fungsi Universal Update Firebase
-        function updateDB(path, status) {
-            db.update({ [path]: status })
-              .then(() => console.log(path + " updated to: " + status))
-              .catch(() => alert("Gagal koneksi database!"));
+        // --- FUNGSI MENGIRIM STATUS KE FIREBASE ---
+        function setSystem(val) {
+            db.update({ toggle_system: val })
+              .then(() => alert("Sistem diubah ke: " + val))
+              .catch((err) => alert("Gagal update: " + err));
         }
 
-        // Monitor Koneksi
-        firebase.database().ref(".info/connected").on("value", (snap) => {
-            const el = document.getElementById("conn-status");
-            el.innerText = snap.val() === true ? "ONLINE" : "OFFLINE";
-            el.style.color = snap.val() === true ? "#00e676" : "#ff1744";
-        });
-
-        // Monitor Saklar Fisik
-        db.child('toggle_system').on('value', (snap) => {
-            const val = snap.val() || "OFF";
-            const el = document.getElementById("toggle-status");
-            el.innerText = val === "ON" ? "AKTIF (BERFUNGSI)" : "MATI (TERKUNCI)";
-            el.style.color = val === "ON" ? "#00e676" : "#ff1744";
-        });
-
-        // Monitor Visibility
-        db.child('secret_visibility').on('value', (snap) => {
-            const val = snap.val() || "OFF";
-            const el = document.getElementById("secret-status");
-            el.innerText = val === "ON" ? "TERLIHAT (ON)" : "TERSEMBUNYI (OFF)";
-            el.style.color = val === "ON" ? "#00e676" : "#ff1744";
+        // --- MONITOR STATUS SAAT INI ---
+        db.child('toggle_system').on('value', (snapshot) => {
+            document.getElementById("status").innerText = "Status Sistem: " + (snapshot.val() || "OFF");
         });
     </script>
 </body>
