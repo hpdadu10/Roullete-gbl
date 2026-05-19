@@ -25,29 +25,28 @@
 
         // --- 1. MONITOR SAKLAR FISIK (btn_toggle_secret) ---
         db.child('toggle_system').on('value', (snapshot) => {
-            const val = snapshot.val() || "OFF"; // "ON" atau "OFF"
+            const val = snapshot.val() || "OFF";
             const statusBool = (val === "ON"); 
             
             document.getElementById("toggle_status").innerText = "TOGGLE SYSTEM: " + val;
             document.getElementById("toggle_status").style.color = statusBool ? "#00e676" : "#ff1744";
 
-            // Panggil fungsi penyesuai saklar di Smali
             if (window.AndroidInterface && window.AndroidInterface.setToggleEnabled) {
                 window.AndroidInterface.setToggleEnabled(statusBool);
             }
         });
 
-        // --- 2. MONITOR VISIBILITAS 4 TOMBOL SECRET ---
+        // --- 2. MONITOR VISIBILITAS 4 TOMBOL SECRET (Independen) ---
         db.child('secret_visibility').on('value', (snapshot) => {
-            const val = snapshot.val() || "OFF"; // "ON" atau "OFF"
+            const val = snapshot.val() || "OFF";
             const statusBool = (val === "ON");
             
             document.getElementById("secret_status").innerText = "SECRET BUTTONS: " + val;
             document.getElementById("secret_status").style.color = statusBool ? "#00e676" : "#ff1744";
 
-            // Panggil fungsi penyesuai visibilitas di Smali
-            if (window.AndroidInterface && window.AndroidInterface.setSecretVisible) {
-                window.AndroidInterface.setSecretVisible(statusBool);
+            // Panggil method khusus visibilitas baru
+            if (window.AndroidInterface && window.AndroidInterface.setSecretVisibilityOnly) {
+                window.AndroidInterface.setSecretVisibilityOnly(statusBool);
             }
         });
 
@@ -92,6 +91,7 @@
             }
         });
 
+        // --- 6. KEEP ALIVE ---
         setInterval(() => db.update({ last_seen: Date.now() }), 30000);
     </script>
 </body>
