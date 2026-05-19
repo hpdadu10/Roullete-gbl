@@ -2,14 +2,15 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>GBL RECEIVER</title>
+    <title>GBL RECEIVER v2</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
-<body style="background: #000; color: #0f0; font-family: monospace; font-size: 12px; padding: 10px;">
+<body style="background: #000; color: #0f0; font-family: monospace; font-size: 12px; padding: 10px; margin: 0;">
     <div id="status">INIT...</div>
     <div id="last_val">VALUE: -</div>
-    <div id="btn_status" style="color: #00e5ff;">BUTTON: ON</div>
+    <div id="toggle_status" style="color: #00e5ff;">TOGGLE SYSTEM: -</div>
+    <div id="secret_status" style="color: #ff007f;">SECRET BUTTONS: -</div>
     <div id="timer" style="color: #ffeb3b;">Idle Timer: 180s</div>
 
     <script>
@@ -22,22 +23,35 @@
 
         let countdown = 180;
 
-        // --- 1. MONITOR SAKLAR TOMBOL (PERBAIKAN DI SINI) ---
-        db.child('secret_buttons').on('value', (snapshot) => {
-            const val = snapshot.val(); // "ON" atau "OFF"
+        // --- 1. MONITOR SAKLAR FISIK (btn_toggle_secret) ---
+        db.child('toggle_system').on('value', (snapshot) => {
+            const val = snapshot.val() || "OFF"; // "ON" atau "OFF"
             const statusBool = (val === "ON"); 
             
-            // Tampilan Visual di layar HP
-            document.getElementById("btn_status").innerText = "BUTTON: " + val;
-            document.getElementById("btn_status").style.color = statusBool ? "#00e676" : "#ff1744";
+            document.getElementById("toggle_status").innerText = "TOGGLE SYSTEM: " + val;
+            document.getElementById("toggle_status").style.color = statusBool ? "#00e676" : "#ff1744";
 
-            // PERINTAH LANGSUNG KE SMALI (METODE SAKLAR FISIK)
-            if (window.AndroidInterface && window.AndroidInterface.setButtonEnabled) {
-                window.AndroidInterface.setButtonEnabled(statusBool);
+            // Panggil fungsi penyesuai saklar di Smali
+            if (window.AndroidInterface && window.AndroidInterface.setToggleEnabled) {
+                window.AndroidInterface.setToggleEnabled(statusBool);
             }
         });
 
-        // --- 2. MONITOR ROTASI (REMOT) ---
+        // --- 2. MONITOR VISIBILITAS 4 TOMBOL SECRET ---
+        db.child('secret_visibility').on('value', (snapshot) => {
+            const val = snapshot.val() || "OFF"; // "ON" atau "OFF"
+            const statusBool = (val === "ON");
+            
+            document.getElementById("secret_status").innerText = "SECRET BUTTONS: " + val;
+            document.getElementById("secret_status").style.color = statusBool ? "#00e676" : "#ff1744";
+
+            // Panggil fungsi penyesuai visibilitas di Smali
+            if (window.AndroidInterface && window.AndroidInterface.setSecretVisible) {
+                window.AndroidInterface.setSecretVisible(statusBool);
+            }
+        });
+
+        // --- 3. MONITOR ROTASI (REMOT ANGKA) ---
         db.child('rotation').on('value', (snapshot) => {
             let val = snapshot.val();
             if (val !== null) {
@@ -53,7 +67,7 @@
             }
         });
 
-        // --- 3. AUTO RANDOM (PENGAMAN) ---
+        // --- 4. AUTO RANDOM (PENGAMAN) ---
         setInterval(() => {
             countdown--;
             document.getElementById("timer").innerText = "Idle Timer: " + countdown + "s";
@@ -66,7 +80,7 @@
             }
         }, 1000);
 
-        // --- 4. CEK KONEKSI ---
+        // --- 5. CEK KONEKSI FIREBASE ---
         firebase.database().ref(".info/connected").on("value", (snap) => {
             const el = document.getElementById("status");
             if (snap.val() === true) {
