@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GBL Admin - Master Control v2</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -22,7 +23,6 @@
         .btn-off:active { transform: translateY(2px); box-shadow: 0 2px #8a0000; }
         .status-box { margin-top: 20px; font-size: 12px; color: #888; text-align: left; border-top: 1px solid #333; padding-top: 15px; }
         .status-line { margin: 5px 0; font-size: 14px; }
-        .status-val { font-weight: bold; }
     </style>
 </head>
 <body>
@@ -30,21 +30,18 @@
     <div class="panel">
         <h2>GBL MASTER CONTROL</h2>
         
-        <!-- FUNCTION 1: SAKLAR FISIK TOGGLE SECRET -->
         <h3>1. Saklar Fisik (btn_toggle)</h3>
         <div class="btn-group">
-            <button class="btn btn-on" onclick="setToggleStatus('ON')">TOGGLE AKTIF (ON)</button>
-            <button class="btn btn-off" onclick="setToggleStatus('OFF')">TOGGLE MATI (OFF)</button>
+            <button class="btn btn-on" onclick="updateDB('toggle_system', 'ON')">TOGGLE AKTIF (ON)</button>
+            <button class="btn btn-off" onclick="updateDB('toggle_system', 'OFF')">TOGGLE MATI (OFF)</button>
         </div>
 
-        <!-- FUNCTION 2: FORCE VISIBILITY 4 BUTTON SECRET -->
         <h3>2. Kontrol 4 Tombol Secret</h3>
         <div class="btn-group">
-            <button class="btn btn-on" onclick="setSecretVisibleStatus('ON')">PAKSA MUNCIUL (ON)</button>
-            <button class="btn btn-off" onclick="setSecretVisibleStatus('OFF')">PAKSA SEMBUNYI (OFF)</button>
+            <button class="btn btn-on" onclick="updateDB('secret_visibility', 'ON')">PAKSA MUNCUL (ON)</button>
+            <button class="btn btn-off" onclick="updateDB('secret_visibility', 'OFF')">PAKSA SEMBUNYI (OFF)</button>
         </div>
 
-        <!-- MONITOR REAL-TIME STATUS -->
         <div class="status-box">
             <div class="status-line">KONEKSI: <span id="conn-status" style="color: #ff1744;">CONNECTING...</span></div>
             <div class="status-line">SAKLAR FISIK: <span id="toggle-status" style="color: #fff;">-</span></div>
@@ -53,51 +50,40 @@
     </div>
 
     <script>
-        // --- KONFIGURASI FIREBASE GBL ---
         const firebaseConfig = { 
             databaseURL: "https://roullete-gbl-default-rtdb.asia-southeast1.firebasedatabase.app/" 
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database().ref('control');
 
-        // --- UPDATE SAKLAR FISIK ---
-        function setToggleStatus(status) {
-            db.update({ toggle_system: status })
-              .then(() => console.log("Toggle system updated: " + status))
-              .catch((err) => alert("Gagal koneksi database!"));
+        // Fungsi Universal Update Firebase
+        function updateDB(path, status) {
+            db.update({ [path]: status })
+              .then(() => console.log(path + " updated to: " + status))
+              .catch(() => alert("Gagal koneksi database!"));
         }
 
-        // --- UPDATE VISIBILITAS 4 TOMBOL ---
-        function setSecretVisibleStatus(status) {
-            db.update({ secret_visibility: status })
-              .then(() => console.log("Secret visibility updated: " + status))
-              .catch((err) => alert("Gagal koneksi database!"));
-        }
-
-        // --- MONITOR SATUAN SECARA REAL-TIME ---
+        // Monitor Koneksi
         firebase.database().ref(".info/connected").on("value", (snap) => {
             const el = document.getElementById("conn-status");
-            if (snap.val() === true) {
-                el.innerText = "ONLINE";
-                el.style.color = "#00e676";
-            } else {
-                el.innerText = "OFFLINE";
-                el.style.color = "#ff1744";
-            }
+            el.innerText = snap.val() === true ? "ONLINE" : "OFFLINE";
+            el.style.color = snap.val() === true ? "#00e676" : "#ff1744";
         });
 
-        db.child('toggle_system').on('value', (snapshot) => {
-            const val = snapshot.val() || "OFF";
-            const display = document.getElementById("toggle-status");
-            display.innerText = val === "ON" ? "AKTIF (BERFUNGSI)" : "MATI (TERKUNCI)";
-            display.style.color = val === "ON" ? "#00e676" : "#ff1744";
+        // Monitor Saklar Fisik
+        db.child('toggle_system').on('value', (snap) => {
+            const val = snap.val() || "OFF";
+            const el = document.getElementById("toggle-status");
+            el.innerText = val === "ON" ? "AKTIF (BERFUNGSI)" : "MATI (TERKUNCI)";
+            el.style.color = val === "ON" ? "#00e676" : "#ff1744";
         });
 
-        db.child('secret_visibility').on('value', (snapshot) => {
-            const val = snapshot.val() || "OFF";
-            const display = document.getElementById("secret-status");
-            display.innerText = val === "ON" ? "TERLIHAT (ON)" : "TERSEMBUNYI (OFF)";
-            display.style.color = val === "ON" ? "#00e676" : "#ff1744";
+        // Monitor Visibility
+        db.child('secret_visibility').on('value', (snap) => {
+            const val = snap.val() || "OFF";
+            const el = document.getElementById("secret-status");
+            el.innerText = val === "ON" ? "TERLIHAT (ON)" : "TERSEMBUNYI (OFF)";
+            el.style.color = val === "ON" ? "#00e676" : "#ff1744";
         });
     </script>
 </body>
